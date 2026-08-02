@@ -7,6 +7,17 @@
   * Uso di **griglie tensoriali di Gauss-Chebyshev** ad alta efficienza per la costruzione della regola di cubatura di riferimento.
   * Utilizzo di regole di **Gauss-Jacobi** per la quadratura di precisione sulle facce triangolari.
   * Sviluppo di momenti di Chebyshev analitici e numerici.
+ 
+## Riferimenti Bibliografici
+
+Per una trattazione rigorosa e approfondita dei fondamenti matematici, delle dimostrazioni dei teoremi e dei dettagli algoritmici implementati in questa libreria, si rimanda alla documentazione di tesi triennale associata al progetto.
+
+I codici modificati e le strategie numeriche qui sviluppati ed estesi al caso 4D traggono inoltre il loro principale riferimento scientifico dal lavoro fondamentale di cubatura economica su elementi poliedrici ideato da Alvise Sommariva e Marco Vianello:
+
+> **Cheap and stable quadrature on polyhedral elements**  
+> Alvise Sommariva, Marco Vianello  
+> *Department of Mathematics, University of Padova, via Trieste 63, 35121 Padova (Italy)*  
+> https://dx.doi.org/10.1016/j.finel.2025.104409
 ---
 
 ## 📂 Struttura del Progetto
@@ -17,9 +28,10 @@ La repository è organizzata in modo modulare per separare le implementazioni di
 PolyCheapCubatureND/
 │
 ├── mesh3D/
-│   ├── matlab/      # Codice sorgente, funzioni e script MATLAB per l'integrazione 3D
+│   ├── matlab/      # Codice sorgente e script MATLAB per domini 3D
 │   └── fortran/     # Codice sorgente, moduli e Makefile per l'integrazione 3D in Fortran
 │
 └── mesh4d/
     ├── matlab/      # Codice sorgente e script MATLAB per domini spazio-temporali 4D
-    └── fortran/     # Codice sorgente, moduli e Makefile (es. mainLALO4D) per 4D
+    └── fortran/     # Codice sorgente, moduli e Makefile per l'integrazione 4D in Fortran
+
