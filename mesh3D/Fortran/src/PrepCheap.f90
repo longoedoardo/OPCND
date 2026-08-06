@@ -92,18 +92,17 @@ MODULE PrepCheap
         DO j = m, 1, -1
             IF (x(j) > 0) THEN
                 i = j
-                EXIT ! Sostituisce il break di Matlab
+                EXIT
             END IF
         END DO
 
-        ! Core logico dell'avanzamento grlex
         IF (i == 0) THEN
             x(m) = 1
             RETURN
         ELSE IF (i == 1) THEN
             t = x(1) + 1
             im1 = m
-        ELSE ! Equivalente a i>1
+        ELSE 
             t = x(i)
             im1 = i - 1
         END IF

@@ -23,14 +23,15 @@ addpath('CubaturaFunzioniCheap/');
 fprintf('........................\n');
 fprintf('Cubatura con LALOcheap \n');
 fprintf('........................\n');
+ade = 15; 
+
 fprintf('ade: %-3.0f\n', ade);
 
 vertices = load('vertex.dat');
 facets   = load('tri.dat');
 
-ade = 4; 
 
-f = @(x,y,z) x.^4 + y + z;
+f = @(x,y,z) ones(size(x));
 
 %**************************************************************************
 % Fase indipendente dalla geometria: griglia e base polinomiale di

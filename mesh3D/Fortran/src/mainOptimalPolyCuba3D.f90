@@ -1,4 +1,4 @@
-PROGRAM mainLALO3D
+PROGRAM mainOptimalPolyCuba3D
     USE TypesDef
     USE PolyhedronMesh
     USE PrepCheap
@@ -14,6 +14,22 @@ PROGRAM mainLALO3D
     !**********************************************************************
     ! Setup iniziale
     !**********************************************************************
+
+    ! Prima di procedere alla compilazione e all'esecuzione, verificare 
+    ! e adattare i seguenti parametri in base alle specifiche esigenze:
+    !
+    !   - ade (Grado di Esattezza Algebrica):
+    !      Rappresenta il grado massimo dei polinomi integrati in modo esatto.
+    !      Per funzioni non polinomiali, l'incremento di ade riduce l'errore.
+    !
+    !   - Geometria (Mesh Files):
+    !      I file indicati nella chiamata a MeshReader ('data/vertex.dat' 
+    !      e 'data/tri.dat') definiscono i vertici e le facce del poliedro.
+    !
+    !   - Funzione Integranda (feval):
+    !      Espressione analitica di f(x, y, z). Eventuali argomenti di input 
+    !      non utilizzati genereranno un warning di compilazione del tipo 
+    !      "Unused dummy argument", che non pregiudica l'esecuzione del codice.
 
     ade = 4
 
@@ -99,13 +115,13 @@ PROGRAM mainLALO3D
     ! I = W' * fXYZW
     I_risultato = DOT_PRODUCT(W, fXYZW)
     WRITE(*,*) "**********************************************************************"
-    WRITE(*, '("Integrale I_risultato = ", ES22.15)') I_risultato
+    WRITE(*, '("I = ", ES22.15)') I_risultato
     WRITE(*,*) "**********************************************************************"
  
     CONTAINS
  
     !**********************************************************************
-    ! Funzione integranda f(x,y,z) - Conservata per utilizzi futuri
+    ! Funzione integranda f(x,y,z)
     !**********************************************************************
     SUBROUTINE feval(x_in, y_in, z_in, n_in, fval_out)
         IMPLICIT NONE
@@ -114,8 +130,8 @@ PROGRAM mainLALO3D
         REAL(dp), INTENT(IN)  :: x_in(n_in), y_in(n_in), z_in(n_in)
         REAL(dp), INTENT(OUT) :: fval_out(n_in)
         
-       fval_out = x_in**4 + y_in**4 + z_in**4 + x_in * y_in * z_in
+       fval_out = 1.0_dp
         
     END SUBROUTINE feval
- 
-END PROGRAM mainLALO3D
+
+END PROGRAM mainOptimalPolyCuba3D

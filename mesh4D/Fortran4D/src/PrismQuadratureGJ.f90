@@ -32,7 +32,7 @@ CONTAINS
 
       nGP = ade + 1
 
-      ! 1. Quadratura sul triangolo di riferimento (0,0)-(1,0)-(0,1) 
+      ! Quadratura sul triangolo di riferimento (0,0)-(1,0)-(0,1) 
       ! tramite TriangleQuadraturePoints (che usa internamente Gauss-Jacobi)
       n_spazio = nGP * nGP
       ALLOCATE(P_std(2, n_spazio))
@@ -40,12 +40,12 @@ CONTAINS
 
       CALL TriangleQuadraturePoints(P_std, W_std, n_spazio, nGP)
 
-      ! 2. Generazione nodi e pesi di Gauss-Legendre per l'asse temporale [0, 1]
+      ! Generazione nodi e pesi di Gauss-Legendre per l'asse temporale [0, 1]
       n_tempo = ade + 1
       ALLOCATE(t_time(n_tempo), wt_time(n_tempo))
       CALL gauleg(0.0_dp, 1.0_dp, t_time, wt_time, n_tempo)
 
-      ! 3. Prodotto tensoriale Spazio (Triangolo) x Tempo
+      ! Prodotto tensoriale Spazio (Triangolo) x Tempo
       num_pts = n_spazio * n_tempo
 
       IF (ALLOCATED(XI))    DEALLOCATE(XI)

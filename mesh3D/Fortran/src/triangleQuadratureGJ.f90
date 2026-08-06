@@ -4,7 +4,7 @@ MODULE triangleQuadratureGJ
   ! Quadratura di Gauss-Jacobi su un triangolo generico (3D), ottenuta
   ! mediante shifting affine dei punti/pesi calcolati sul triangolo di
   ! riferimento (0,0), (1,0), (0,1) tramite prodotto conico di formule
-  ! 1D di Gauss-Jacobi (vedi QuadPoints_mod / recipes_light).
+  ! 1D di Gauss-Jacobi.
   !**********************************************************************
   IMPLICIT NONE
 

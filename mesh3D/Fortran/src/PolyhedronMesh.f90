@@ -25,7 +25,7 @@ CONTAINS
         OPEN(NEWUNIT=u_vert, FILE=vertici_file, STATUS='OLD', ACTION='READ', IOSTAT=ierr)
         IF (ierr /= 0) STOP "ERRORE: Impossibile aprire il file dei vertici."
 
-        READ(u_vert, *) n_vertici ! Leggo il primo numero in cima al file e lo salvo
+        READ(u_vert, *) n_vertici ! Leggo il primo numero in cima al file e lo salvo (numero vertici), deve essere presente senno' la lettura si blocca
         ALLOCATE(poly%vertici(n_vertici, 3)) 
 
         READ(u_vert, *) ((poly%vertici(i, j), j=1,3), i=1,n_vertici)
@@ -35,7 +35,7 @@ CONTAINS
         OPEN(NEWUNIT=u_tri, FILE=tri_file, STATUS='OLD', ACTION='READ', IOSTAT=ierr)
         IF (ierr /= 0) STOP "ERRORE: Impossibile aprire il file delle facce."
 
-        READ(u_tri, *) n_facce
+        READ(u_tri, *) n_facce ! Leggo il primo numero in cima al file e lo salvo (numero facce), deve essere presente senno' la lettura si blocca
         ALLOCATE(poly%facce(n_facce, 3))
         
         READ(u_tri, *) ((poly%facce(i, j), j=1,3), i=1,n_facce)
