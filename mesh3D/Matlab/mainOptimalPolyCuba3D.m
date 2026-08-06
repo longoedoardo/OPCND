@@ -1,7 +1,6 @@
-
 %**************************************************************************
 %
-%                               MAIN LALO 3D
+%                         MAIN OptimalPolyCuba3D
 %
 %**************************************************************************
 %
@@ -9,40 +8,38 @@
 % definito, usando grado algebrico di esattezza "ade".
 % 
 % INPUT:
-%   vertices : Matrice Nv x 3 dei vertici [x, y, z]
-%   facets   : Struttura o cell array delle facce (richiesto da chebyshev_moments_polyhedron)
+%   vertices : Matrice N x 3 dei vertici [x, y, z]
+%   facets   : Struttura o cell array delle facce
 %   ade      : Grado di esattezza algebrica
-%   f        : Function handle della funzione integranda es. @(x,y,z) x.^3 + y + z
+%   f        : Function handle della funzione integranda
 %
 %**************************************************************************
 
-addpath('GeometryCheap/');
 addpath('PrepCheap/');
 addpath('CubaturaFunzioniCheap/');
 
 fprintf('........................\n');
-fprintf('Cubatura con LALOcheap \n');
+fprintf('Cubatura con OptimalPolyCuba3D \n');
 fprintf('........................\n');
-ade = 15; 
 
+ade = 15; 
 fprintf('ade: %-3.0f\n', ade);
 
 vertices = load('vertex.dat');
 facets   = load('tri.dat');
-
-
 f = @(x,y,z) ones(size(x));
 
 %**************************************************************************
-% Fase indipendente dalla geometria: griglia e base polinomiale di
-% riferimento, generate una sola volta in funzione del solo grado "ade"
+%
+% INIZIO PARTE SHAPE-INDEPENDENT
+%
 %**************************************************************************
+
 % Griglia tensoriale di Gauss-Chebyshev sul cubo di riferimento [-1,1]^3
 XYZW_tens_ref = cub_gausscheb_tens3D(2*ade);
 
 % Dimensione dello spazio polinomiale di grado totale <= ade
 N_mom = ((ade+3)*(ade+2)*(ade+1))/6;
-fprintf('Dimensione spazio polinomiale (N_mom): %-3.0f\n', N_mom);
 
 % Indici (i,j,k) dei monomi tensoriali di Chebyshev, ordinamento GRLEX
 chebyshev_indices = zeros(N_mom,3);
@@ -52,19 +49,18 @@ end
 
 % Matrice di Vandermonde-Chebyshev 3D sui nodi della griglia di riferimento
 X = XYZW_tens_ref(:,1:3);
-V_ref = dCHEBVAND(ade, X, chebyshev_indices);
 
 %**************************************************************************
-% Bounding box del poliedro (min/max per coordinata)
-% IMPORTANTE: Formattato identico al blocco Fortran per evitare scambi di assi
+%
+% INIZIO PARTE SHAPE-DEPENDENT
+%
 %**************************************************************************
+
+V_ref = dCHEBVAND(ade, X, chebyshev_indices);
 bbox_min = min(vertices, [], 1);
 bbox_max = max(vertices, [], 1);
 bbox = [bbox_min; bbox_max]; 
 
-%**************************************************************************
-% Calcolo dei momenti sul poliedro e assemblaggio dei pesi di cubatura
-%**************************************************************************
 % Coefficienti di normalizzazione della base di Chebyshev tensoriale
 coeffs = tenscheb_norm2sq(chebyshev_indices);
 
@@ -79,9 +75,6 @@ XYZW_tens = scale_rule(XYZW_tens_ref, bbox);
 W = (XYZW_tens(:,4)) .* V_ref * (moments_ch ./ coeffs);
 XYZW = [XYZW_tens(:,1:3) W];
 
-%**************************************************************************
-% Valutazione della cubatura
-%**************************************************************************
 fXYZW = feval(f, XYZW(:,1), XYZW(:,2), XYZW(:,3));
 W = XYZW(:,4);
 I = W' * fXYZW;

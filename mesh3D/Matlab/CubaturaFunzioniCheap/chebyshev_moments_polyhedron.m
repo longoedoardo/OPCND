@@ -36,27 +36,6 @@ function moments=chebyshev_moments_polyhedron(vertices,facets,ade,chebyshev_indi
 %                    ogni tripla di indici in chebyshev_indices.
 %
 %**************************************************************************
-% FASI DEL CALCOLO:
-%
-% 1. BOUNDING BOX (dbox):
-%    Viene calcolato l'iper-rettangolo [min_x, max_x, min_y, max_y, min_z, max_z]
-%    che racchiude i vertici attivi. Questo è necessario per la 
-%    definizione della base di Chebyshev sul dominio specifico.
-%
-% 2. INTEGRAZIONE SULLE FACCE (chebyshev_moms):
-%    Per ogni faccia del poliedro:
-%    - Si estraggono le coordinate 3D dei vertici in modo ottimizzato.
-%    - Si genera una regola di cubatura (nodi e pesi) sulla faccia.
-%    - Si proietta la faccia dal piano 3D al piano locale 2D (maptopolygon2/3).
-%    - Si calcolano i momenti superficiali sulla faccia tramite cubatura tensoriale.
-%    - Si applica la componente x della normale (norm_ext(1)) in modo 
-%      vettorializzato (senza cicli interni) come previsto dal teorema della divergenza.
-%
-% 3. ASSEMBLAGGIO FINALE:
-%    I contributi di tutte le facce vengono sommati per ottenere il valore
-%    dell'integrale sul volume totale del poliedro.
-%
-%**************************************************************************
 % Riferimento bibliografico:
 % [1] E.B. Chin, J.B. Lasserre, N. Sukumar: "Numerical integration of 
 % homogeneous function on convex and nonconvex polygons and polyhedra".
@@ -101,9 +80,9 @@ for k = 1:n_facce
     WV_CUB = xyw(:, 3);
 
     % Calcolo dei momenti superficiali grezzi
-    moms_facet_raw = cubature_tens_chebyshev_facet_V(nodes_XYZW, WV_CUB, chebyshev_indices, dbox);
+    moms_facet = cubature_tens_chebyshev_facet_V(nodes_XYZW, WV_CUB, chebyshev_indices, dbox);
 
-    chebyshev_moms(:, k) = norm_ext(1) * moms_facet_raw;
+    chebyshev_moms(:, k) = norm_ext(1) * moms_facet;
 end
 
 % Somma finale dei contributi di tutte le facce

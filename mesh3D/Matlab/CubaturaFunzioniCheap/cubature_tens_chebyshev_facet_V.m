@@ -75,7 +75,7 @@ IntX_cols = IntX(:, idx_i);
 TY_cols   = TY(:,   idx_j);
 TZ_cols   = TZ(:,   idx_k);
 
-% Combinazione finale con i pesi tramite moltiplicazione matrice-vettore (più efficiente di sum e broadcasting pesanti)
+% Combinazione finale con i pesi tramite moltiplicazione matrice-vettore
 w = weights(:);
 chebyshev_moms = B1 * (((IntX_cols .* TY_cols .* TZ_cols)' * w));
 
