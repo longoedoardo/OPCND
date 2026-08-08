@@ -45,8 +45,6 @@ CONTAINS
         ! finale e' un vettore di 6 valori che viene inserito in poly%bbox
         poly%bbox = [MINVAL(poly%vertici(:,1)), MAXVAL(poly%vertici(:,1)), MINVAL(poly%vertici(:,2)), MAXVAL(poly%vertici(:,2)), MINVAL(poly%vertici(:,3)), MAXVAL(poly%vertici(:,3))]
 
-        WRITE(*,*) "Geometria caricata con successo!"
-        WRITE(*,*) "**********************************************************************"
     END SUBROUTINE MeshReader
 
 END MODULE PolyhedronMesh

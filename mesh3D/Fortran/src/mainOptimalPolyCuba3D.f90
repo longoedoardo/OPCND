@@ -33,7 +33,6 @@ PROGRAM mainOptimalPolyCuba3D
 
     ade = 4
 
-    WRITE(*,*) "Inizio caricamento geometria..."
     ! Legge vertices.dat e tri.dat, calcola bbox, salva tutto in poly
     CALL MeshReader('data/vertex.dat', 'data/tri.dat', poly)
 
@@ -41,7 +40,6 @@ PROGRAM mainOptimalPolyCuba3D
     ! INIZIO PARTE SHAPE-INDEPENDENT
     !**********************************************************************
 
-    WRITE(*,*) "Inizio parte shape-indipendent..."
     ! Griglia tensoriale Gauss-Chebyshev: input 2*ade, output XYZW_tens_ref
     CALL cub_gausscheb_tens3D(2*ade, XYZW_tens_ref)
     
@@ -70,18 +68,15 @@ PROGRAM mainOptimalPolyCuba3D
     X(:,2) = XYZW_tens_ref(:,2)
     X(:,3) = XYZW_tens_ref(:,3)
 
-    WRITE(*,*) "Fine parte shape-indipendent!"
-    WRITE(*,*) "**********************************************************************"
- 
-    !**********************************************************************
-    ! INIZIO PARTE SHAPE-DEPENDENT
-    !**********************************************************************
-
     ! Matrice di Vandermonde di Chebyshev: V_ref(N, N_mom)
     CALL dCHEBVAND(ade, X, chebyshev_indices, V_ref)
 
     ! Coefficienti di norma^2 dei polinomi di Chebyshev
     CALL tenscheb_norm2sq(chebyshev_indices, coeffs)
+ 
+    !**********************************************************************
+    ! INIZIO PARTE SHAPE-DEPENDENT
+    !**********************************************************************
 
     ! Momenti di Chebyshev sul poliedro
     CALL chebyshev_moments_polyhedron(poly%vertici, poly%facce, ade, chebyshev_indices, poly%bbox, moments_ch)
