@@ -1,4 +1,4 @@
-function moments=chebyshev_moments_polyhedron(vertices,facets,ade,chebyshev_indices, dbox)
+function moments = chebyshev_moments_polyhedron(vertices, facets, ade, chebyshev_indices, dbox)
 %**************************************************************************
 %
 % function moments = chebyshev_moments_polyhedron(vertices, facets, ade, chebyshev_indices, dbox)
@@ -12,6 +12,9 @@ function moments=chebyshev_moments_polyhedron(vertices,facets,ade,chebyshev_indi
 % campo vettoriale V = (f, 0, 0), dove f è la primitiva rispetto a x del
 % polinomio di Chebyshev considerato.
 %
+% L'integrazione su ciascuna faccia triangolare avviene direttamente in 3D
+% tramite quadratura di Gauss-Jacobi sul triangolo (TriangleQuadraturePoints
+% + mapTrianglePoints). 
 %**************************************************************************
 % INPUT:
 %
@@ -31,13 +34,13 @@ function moments=chebyshev_moments_polyhedron(vertices,facets,ade,chebyshev_indi
 %
 %**************************************************************************
 % OUTPUT:
-% 
+%
 % moments:           Vettore colonna contenente i momenti calcolati per
 %                    ogni tripla di indici in chebyshev_indices.
 %
 %**************************************************************************
 % Riferimento bibliografico:
-% [1] E.B. Chin, J.B. Lasserre, N. Sukumar: "Numerical integration of 
+% [1] E.B. Chin, J.B. Lasserre, N. Sukumar: "Numerical integration of
 % homogeneous function on convex and nonconvex polygons and polyhedra".
 % Computational Mechanics, Vol. 56, No. 6, pp 967-981.
 %**************************************************************************
@@ -52,39 +55,38 @@ v1 = vertices(facets(:, 1), :);
 v2 = vertices(facets(:, 2), :);
 v3 = vertices(facets(:, 3), :);
 
-% Ciclo sulle facce
+% Regola di quadratura sul triangolo di riferimento: dipende solo dal
+% grado richiesto, quindi va calcolata una sola volta e riusata per tutte
+% le facce.
+% Grado di precisione richiesto: ade+1,
+% quindi servono almeno nGP punti per dimensione tali che 2*nGP-1 >=
+% ade+1.
+
+nGP = ceil((ade + 2) / 2) + 1; % margine di sicurezza
+[nodi_rif, pesi_rif] = TriangleQuadraturePoints(nGP);
+
 for k = 1:n_facce
 
-    % Costruzione vettoriale dei vertici della faccia corrente
-    XV = [v1(k, 1); v2(k, 1); v3(k, 1)];
-    YV = [v1(k, 2); v2(k, 2); v3(k, 2)];
-    ZV = [v1(k, 3); v2(k, 3); v3(k, 3)];
+    Vk = [v1(k,:); v2(k,:); v3(k,:)];
 
-    % Proiezione 3D -> 2D
-    [xv0, yv0, zv0, R10, RFM] = maptopolygon2(XV, YV, ZV);
+    % Nodi fisici, pesi fisici e normale esterna sulla faccia triangolare
+    [nodes_XYZW, WV_CUB, norm_ext] = mapTrianglePoints(nodi_rif, pesi_rif, Vk);
 
-    % Generazione nodi e pesi di cubatura sul poligono 2D piano
-    [xyw, ~, ~, ~, ~] = polygauss_2018(ade+1, xv0, yv0);
+    if all(norm_ext == 0)
+        % Faccia degenere: nessun contributo
+        continue;
+    end
 
-    % Preparazione coordinate 3D dei nodi nel sistema locale
-    n_nodi = size(xyw, 1);
-    xv_cub = xyw(:, 1);
-    yv_cub = xyw(:, 2);
-    zw_cub = zv0(1) * ones(n_nodi, 1);
-
-    % Mapping inverso 2D -> 3D e calcolo normale esterna
-    [XV_CUB, YV_CUB, ZV_CUB, norm_ext] = maptopolygon3(xv_cub, yv_cub, zw_cub, R10, RFM);
-
-    % Raggruppamento nodi 3D
-    nodes_XYZW = [XV_CUB, YV_CUB, ZV_CUB];
-    WV_CUB = xyw(:, 3);
-
-    % Calcolo dei momenti superficiali grezzi
+    % Calcolo dei momenti superficiali grezzi (integrale della primitiva
+    % rispetto a x, valutata sui nodi della faccia)
     moms_facet = cubature_tens_chebyshev_facet_V(nodes_XYZW, WV_CUB, chebyshev_indices, dbox);
 
+    % Componente x della normale esterna, come richiesto dal teorema della
+    % divergenza applicato al campo V = (f, 0, 0)
     chebyshev_moms(:, k) = norm_ext(1) * moms_facet;
 end
 
 % Somma finale dei contributi di tutte le facce
 moments = sum(chebyshev_moms, 2);
+
 end

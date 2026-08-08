@@ -15,14 +15,14 @@
 %
 %**************************************************************************
 
-addpath('PrepCheap/');
-addpath('CubaturaFunzioniCheap/');
+addpath('ShapeIndependent/');
+addpath('ShapeDependent/');
 
 fprintf('........................\n');
 fprintf('Cubatura con OptimalPolyCuba3D \n');
 fprintf('........................\n');
 
-ade = 15; 
+ade = 1; 
 fprintf('ade: %-3.0f\n', ade);
 
 vertices = load('vertex.dat');
@@ -50,19 +50,20 @@ end
 % Matrice di Vandermonde-Chebyshev 3D sui nodi della griglia di riferimento
 X = XYZW_tens_ref(:,1:3);
 
+V_ref = dCHEBVAND(ade, X, chebyshev_indices);
+
+% Coefficienti di normalizzazione della base di Chebyshev tensoriale
+coeffs = tenscheb_norm2sq(chebyshev_indices);
+
 %**************************************************************************
 %
 % INIZIO PARTE SHAPE-DEPENDENT
 %
 %**************************************************************************
 
-V_ref = dCHEBVAND(ade, X, chebyshev_indices);
 bbox_min = min(vertices, [], 1);
 bbox_max = max(vertices, [], 1);
 bbox = [bbox_min; bbox_max]; 
-
-% Coefficienti di normalizzazione della base di Chebyshev tensoriale
-coeffs = tenscheb_norm2sq(chebyshev_indices);
 
 % Momenti della base sul poliedro (teorema della divergenza sulle facce)
 moments_ch = chebyshev_moments_polyhedron(vertices, facets, ade, ...
