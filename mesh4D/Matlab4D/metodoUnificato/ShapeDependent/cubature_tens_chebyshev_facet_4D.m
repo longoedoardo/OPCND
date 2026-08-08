@@ -1,5 +1,25 @@
 function moms_facet_raw = cubature_tens_chebyshev_facet_4D(XYZTW, WV_CUB, ade, chebyshev_indices, dbox)
-% Calcola l'integrazione polinomiale pura sulla iperfaccia corrente
+%**************************************************************************
+%
+% function moms_facet_raw = cubature_tens_chebyshev_facet_4D(XYZTW, 
+% WV_CUB, ade, chebyshev_indices, dbox)
+%
+% Calcolo dei momenti superficiali di Chebyshev per le iperfacce 4D 
+% sfruttando l'integrazione analitica (primitiva) lungo la direzione X 
+% derivante dal Teorema della Divergenza.
+%
+% INPUT:
+%   XYZTW             - Punti di quadratura nello spazio fisico 4D (N x 4)
+%   WV_CUB            - Pesi di cubatura corretti con il Gramiano (N x 1)
+%   ade               - Grado di esattezza algebrica
+%   chebyshev_indices - Indici dei monomi tensoriali di Chebyshev (ordine GRLEX)
+%   dbox              - Bounding box 4D
+%
+% OUTPUT:
+%   moms_facet_raw    - Vettore dei momenti superficiali (N_indici x 1)
+%
+%**************************************************************************
+
 num_pts = size(XYZTW, 1);
 num_indici = size(chebyshev_indices, 1);
 

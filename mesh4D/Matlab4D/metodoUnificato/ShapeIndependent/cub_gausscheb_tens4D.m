@@ -9,7 +9,7 @@ function XYZW = cub_gausscheb_tens4D(deg)
 %**************************************************************************
 
 n = ceil((deg + 1) / 2);
-% Nodi di Chebyshev e pesi 1D (vettorializzati)
+% Nodi di Chebyshev e pesi 1D
 
 k = (1:n).';
 angoli = ((2*k - 1) * pi) / (2 * n);
@@ -24,8 +24,7 @@ W4 = Wx .* Wy .* Wz .* Wtau; % peso 3D
 
 N4 = n^4; % numero totale di punti nella griglia 4D
 XYZW = zeros(N4, 5);
-% La funzione reshape mi trasorma l'array 4d X in un vettore colonna
-% di lunghezza N4
+
 XYZW(:,1) = reshape(X, N4, 1);
 XYZW(:,2) = reshape(Y, N4, 1);
 XYZW(:,3) = reshape(Z, N4, 1);

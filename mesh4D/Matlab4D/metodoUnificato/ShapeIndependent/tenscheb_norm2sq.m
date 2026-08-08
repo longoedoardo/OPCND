@@ -15,8 +15,6 @@ function coeffs = tenscheb_norm2sq(chebyshev_indices)
 %   coeffs: Vettore colonna (N x 1) con il valore dell'integrale T^2
 %**************************************************************************
 
-% Il comando (chebyshev_indices ~= 0) restituisce una matrice logica di 1 e 0.
-% sum(..., 2) somma lungo le righe, contando quanti indici non sono zero per ogni monomio.
 num_indici_non_zero = sum(chebyshev_indices ~= 0, 2);
 coeffs = (pi^4) ./ (2 .^ num_indici_non_zero);
 

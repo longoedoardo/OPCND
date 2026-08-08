@@ -21,13 +21,8 @@ max_val = dbox(2, :); % Vettore riga 1x4
 centro = (min_val + max_val) / 2; % Spostamento (1 x 4)
 semi_ampiezza = (max_val - min_val) / 2;  % Dilatazione (1 x 4)
 
-% Moltiplichiamo e sommiamo le prime 4 colonne in un colpo solo.
-% MATLAB applica automaticamente centro (1x4) e semi_ampiezza (1x4) 
-% a tutte le righe della matrice XYZTW_tens_ref (Mx4).
 XYZW_tens(:, 1:4) = centro + semi_ampiezza .* XYZTW_tens_ref(:, 1:4);
 
-% Se la matrice di riferimento ha 5 colonne, copiamo i pesi originali
-% nella quinta colonna dell'output, senza modificarli (come da teoria).
 if size(XYZTW_tens_ref, 2) == 5
     XYZW_tens(:, 5) = XYZTW_tens_ref(:, 5);
 end
