@@ -15,7 +15,6 @@ OptimalPolyCubatureND è un progetto di ricerca orientato al calcolo numerico di
 - MATLAB
 - Fortran 90
 - GNU Make
-- gfortran
 
 ## Prerequisiti
 
@@ -122,6 +121,14 @@ Il repository contiene già esempi di esecuzione nei file main:
 - [mesh4D/Fortran4D/Tensor/src/mainOptimalPolyCuba4D_Tensor.f90](mesh4D/Fortran4D/Tensor/src/mainOptimalPolyCuba4D_Tensor.f90)
 
 Questi file usano dati di esempio già presenti nelle rispettive cartelle data/ o nella directory corrente.
+
+## Riferimenti scientifici
+
+Il riferimento principale alla base metodologica del progetto è l'articolo:
+
+- Sommariva, A., Vianello, M. "Cheap and stable quadrature on polyhedral elements". DOI: https://dx.doi.org/10.1016/j.finel.2025.104409
+
+Per una trattazione teorica completa, inclusi i dettagli matematici, le dimostrazioni e l'analisi delle varie componenti del metodo, si rimanda alla tesi associata al progetto, che raccoglie i riferimenti e le motivazioni teoriche per la formulazione del problema di cubatura su poliedri e l'estensione del metodo ai domini spazio-temporali 4D.
 
 ## Test
 
