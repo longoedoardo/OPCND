@@ -1,54 +1,56 @@
 MODULE PrepCheap
-USE TypesDef
 
     IMPLICIT NONE
 
     CONTAINS
 
-    SUBROUTINE cub_gausscheb_tens4D(deg, xyzw)
+    SUBROUTINE cub_gausscheb_tens3D(deg, xyzw)
     !*******************************************************************************
-    ! Calcola i punti e i pesi per l'integrazione numerica in 4D.
+    ! Calcola i punti e i pesi per l'integrazione numerica in 3D.
     ! Utilizza una griglia a prodotto tensoriale basata sui nodi di Gauss-Chebyshev.
     !*******************************************************************************
-    INTEGER, INTENT(IN) :: deg
-    REAL(dp), ALLOCATABLE, INTENT(OUT) :: xyzw(:,:)
-    INTEGER :: n, n4, i, j, k, l, idx
-    REAL(dp), ALLOCATABLE :: x(:), w(:)
+        INTEGER, INTENT(IN)                     :: deg
+        REAL, ALLOCATABLE, INTENT(OUT)          :: xyzw(:,:)
+        REAL, PARAMETER                         :: PI = 3.14159265358979323846
+        INTEGER                                 :: n,n3,i,j,k, idx
+        REAL, ALLOCATABLE                       :: x(:), w(:)
 
-    n = deg + 1
-    n4 = n**4
+        n = (deg+2)/2
+        n3 = n**3
 
-    IF (ALLOCATED(xyzw)) DEALLOCATE(xyzw)
-    ALLOCATE(xyzw(n4, 5))
+        IF (ALLOCATED(xyzw)) DEALLOCATE(xyzw)
+        ALLOCATE(xyzw(n3, 4))
 
-    IF (ALLOCATED(x)) DEALLOCATE(x)
-    ALLOCATE(x(n))
+        IF (ALLOCATED(x)) DEALLOCATE(x)
+        ALLOCATE(x(n))
 
-    IF (ALLOCATED(w)) DEALLOCATE(w)
-    ALLOCATE(w(n))
+        IF (ALLOCATED(w)) DEALLOCATE(w)
+        ALLOCATE(w(n))
 
-    DO i = 1, n
-        x(i) = COS( ((2.0 * REAL(i) - 1.0) * PI) / (2.0 * REAL(n)) )
-        w(i) = PI / REAL(n)
-    END DO
+        DO i = 1,n
+            x(i) = cos( ((2.0 * i - 1.0) * PI) / (2.0 * n) )
+            w(i) = PI / real(n)
+        END DO
 
-    idx = 1
-    DO l = 1, n ! TAU
+        idx = 1
         DO k = 1, n ! Z
             DO j = 1, n ! Y
                 DO i = 1, n ! X
+                    
                     xyzw(idx, 1) = x(i)
                     xyzw(idx, 2) = x(j)
                     xyzw(idx, 3) = x(k)
-                    xyzw(idx, 4) = x(l)
-                    xyzw(idx, 5) = w(i) * w(j) * w(k) * w(l)
+                    xyzw(idx, 4) = w(i) * w(j) * w(k) ! W3 e' dato dal prodotto dei pesi
+                    
                     idx = idx + 1
+                    
                 END DO
             END DO
         END DO
-    END DO
 
-    END SUBROUTINE cub_gausscheb_tens4D
+
+
+    END SUBROUTINE cub_gausscheb_tens3D
 
 
 
@@ -90,18 +92,17 @@ USE TypesDef
         DO j = m, 1, -1
             IF (x(j) > 0) THEN
                 i = j
-                EXIT ! Sostituisce il break di Matlab
+                EXIT
             END IF
         END DO
 
-        ! Core logico dell'avanzamento grlex
         IF (i == 0) THEN
             x(m) = 1
             RETURN
         ELSE IF (i == 1) THEN
             t = x(1) + 1
             im1 = m
-        ELSE ! Equivalente a i>1
+        ELSE 
             t = x(i)
             im1 = i - 1
         END IF

@@ -1,139 +1,67 @@
-MODULE PrismQuadratureGJ
-  USE TypesDef
-  
+MODULE triangleQuadratureGJ
+  USE TypesDef, ONLY: dp
+  !**********************************************************************
+  ! Quadratura di Gauss-Jacobi su un triangolo generico (3D), ottenuta
+  ! mediante shifting affine dei punti/pesi calcolati sul triangolo di
+  ! riferimento (0,0), (1,0), (0,1) tramite prodotto conico di formule
+  ! 1D di Gauss-Jacobi.
+  !**********************************************************************
   IMPLICIT NONE
 
 CONTAINS
 
-  SUBROUTINE reference_prism_quadrature(ade, dbox, XI, ETA, T, W_ref, scale_x, num_pts)
+  SUBROUTINE shiftingTriangleQuadrature(V, nGP, P, W)
+    !**********************************************************************
+    IMPLICIT NONE
+    !**********************************************************************
+    ! Argument list                                                          
+    REAL(dp),    INTENT(IN)                  :: V(3,3)  ! Vertici del triangolo, per riga
+    INTEGER, INTENT(IN)                      :: nGP     ! N. punti di Gauss-Jacobi 1D
+    REAL(dp),    ALLOCATABLE, INTENT(OUT)    :: P(:,:)  ! Punti quadratura reali (n_points,3)
+    REAL(dp),    ALLOCATABLE, INTENT(OUT)    :: W(:)    ! Pesi quadratura reali (n_points)
+    !**********************************************************************
+    ! Local variables                                                        
+    INTEGER                                  :: i, n_points
+    REAL(dp)                                 :: Area
+    REAL(dp)                                 :: A(3), B(3)
+    REAL(dp), ALLOCATABLE                    :: P_std(:,:), W_std(:)   ! Punti/pesi sul triangolo di riferimento
+    !**********************************************************************
+    n_points = nGP * nGP
 
-   !*******************************************************************************
-   ! Genera la griglia di quadratura sul prisma di riferimento (Triangolo x [0,1])
-   ! accoppiando una regola per triangoli basata su Gauss-Jacobi (via TriangleQuadraturePoints)
-   ! con Gauss-Legendre per l'asse temporale.
-   ! Adattato alla logica della versione MATLAB e sfruttando le subroutine del modulo.
-   !*******************************************************************************
+    ALLOCATE(P_std(2, n_points))
+    ALLOCATE(W_std(n_points))
 
-      IMPLICIT NONE
+    ! Punti e pesi sul triangolo di riferimento (0,0), (1,0), (0,1)
+    CALL TriangleQuadraturePoints(P_std, W_std, n_points, nGP)
 
-      ! Input variables
-      INTEGER, INTENT(IN)                   :: ade
-      REAL(dp), INTENT(IN)                  :: dbox(:, :)
+    IF (ALLOCATED(P)) DEALLOCATE(P)
+    ALLOCATE(P(n_points, 3))
 
-      ! Output variables
-      REAL(dp), ALLOCATABLE, INTENT(OUT)    :: XI(:), ETA(:), T(:), W_ref(:)
-      REAL(dp), INTENT(OUT)                 :: scale_x
-      INTEGER, INTENT(OUT)                  :: num_pts
+    IF (ALLOCATED(W)) DEALLOCATE(W)
+    ALLOCATE(W(n_points))
 
-      ! Local variables
-      INTEGER                               :: nGP, n_spazio, n_tempo, i, j, idx
-      REAL(dp), ALLOCATABLE                 :: P_std(:, :), W_std(:)
-      REAL(dp), ALLOCATABLE                 :: t_time(:), wt_time(:)
+    ! Lati del triangolo reale a partire dal primo vertice
+    A = V(2,:) - V(1,:)
+    B = V(3,:) - V(1,:)
 
-      nGP = ade + 1
+    ! Shifting affine dei punti dal triangolo di riferimento a quello reale.
+    ! NB: P_std ha shape (2, n_points) -> coordinata (riga), punto (colonna)
+    DO i = 1, n_points
+       P(i,:) = V(1,:) + P_std(1,i)*A + P_std(2,i)*B
+    END DO
 
-      ! Quadratura sul triangolo di riferimento (0,0)-(1,0)-(0,1) 
-      ! tramite TriangleQuadraturePoints (che usa internamente Gauss-Jacobi)
-      n_spazio = nGP * nGP
-      ALLOCATE(P_std(2, n_spazio))
-      ALLOCATE(W_std(n_spazio))
+    ! Area del triangolo reale: metà del modulo del prodotto vettoriale A x B
+    Area = 0.5 * SQRT( (A(2)*B(3) - A(3)*B(2))**2 &
+                      + (A(3)*B(1) - A(1)*B(3))**2 &
+                      + (A(1)*B(2) - A(2)*B(1))**2 )
 
-      CALL TriangleQuadraturePoints(P_std, W_std, n_spazio, nGP)
+    ! I pesi standard sommano a 0.5 (area del triangolo di riferimento):
+    ! si riscalano quindi con il rapporto Area / 0.5 = 2 * Area
+    W = 2.0 * Area * W_std
 
-      ! Generazione nodi e pesi di Gauss-Legendre per l'asse temporale [0, 1]
-      n_tempo = ade + 1
-      ALLOCATE(t_time(n_tempo), wt_time(n_tempo))
-      CALL gauleg(0.0_dp, 1.0_dp, t_time, wt_time, n_tempo)
+    DEALLOCATE(P_std, W_std)
 
-      ! Prodotto tensoriale Spazio (Triangolo) x Tempo
-      num_pts = n_spazio * n_tempo
-
-      IF (ALLOCATED(XI))    DEALLOCATE(XI)
-      IF (ALLOCATED(ETA))   DEALLOCATE(ETA)
-      IF (ALLOCATED(T))     DEALLOCATE(T)
-      IF (ALLOCATED(W_ref)) DEALLOCATE(W_ref)
-
-      ALLOCATE(XI(num_pts))
-      ALLOCATE(ETA(num_pts))
-      ALLOCATE(T(num_pts))
-      ALLOCATE(W_ref(num_pts))
-
-      idx = 1
-      DO i = 1, n_spazio
-         DO j = 1, n_tempo
-            XI(idx)    = P_std(1, i)
-            ETA(idx)   = P_std(2, i)
-            T(idx)     = t_time(j)
-            W_ref(idx) = W_std(i) * wt_time(j)
-            idx        = idx + 1
-         END DO
-      END DO
-
-      ! Fattore di scala fisico per la primitiva lungo X (derivante dalla dbox)
-      scale_x = (dbox(2, 1) - dbox(1, 1)) / 2.0_dp
-
-      DEALLOCATE(P_std, W_std, t_time, wt_time)
-
-   END SUBROUTINE reference_prism_quadrature
-
-   SUBROUTINE PrismQuad4D(V, XI_ref, ETA_ref, T_ref, W_ref, XYZTW, WV_CUB)
-
-      IMPLICIT NONE
-
-      REAL(dp), INTENT(IN)                  :: V(:, :)
-      REAL(dp), INTENT(IN)                  :: XI_ref(:)
-      REAL(dp), INTENT(IN)                  :: ETA_ref(:)
-      REAL(dp), INTENT(IN)                  :: T_ref(:)
-      REAL(dp), INTENT(IN)                  :: W_ref(:)
-
-      REAL(dp), ALLOCATABLE, INTENT(OUT)    :: XYZTW(:, :)
-      REAL(dp), ALLOCATABLE, INTENT(OUT)    :: WV_CUB(:)   ! ora e' la misura di flusso "con segno" (nx * dV)
-
-      INTEGER                               :: num_pts, i
-      REAL(dp), ALLOCATABLE                 :: X_base(:, :), X_top(:, :)
-      REAL(dp), ALLOCATABLE                 :: g_xi(:, :), g_eta(:, :), g_tau(:, :)
-      REAL(dp), ALLOCATABLE                 :: N1(:)        ! componente x del vettore normale generalizzato 4D
-
-      num_pts = SIZE(W_ref)
-
-      IF (ALLOCATED(XYZTW))  DEALLOCATE(XYZTW)
-      IF (ALLOCATED(WV_CUB)) DEALLOCATE(WV_CUB)
-
-      ALLOCATE(XYZTW(num_pts, 4))
-      ALLOCATE(WV_CUB(num_pts))
-      ALLOCATE(X_base(num_pts, 4), X_top(num_pts, 4))
-      ALLOCATE(g_xi(num_pts, 4), g_eta(num_pts, 4), g_tau(num_pts, 4))
-      ALLOCATE(N1(num_pts))
-
-      DO i = 1, 4
-         X_base(:, i) = V(1, i) + XI_ref * (V(2, i) - V(1, i)) + ETA_ref * (V(3, i) - V(1, i))
-         X_top(:, i)  = V(4, i) + XI_ref * (V(5, i) - V(4, i)) + ETA_ref * (V(6, i) - V(4, i))
-      END DO
-
-      DO i = 1, 4
-         XYZTW(:, i) = (1.0_dp - T_ref) * X_base(:, i) + T_ref * X_top(:, i)
-      END DO
-
-      ! Vettori tangenti locali (dipendono da T_ref: variano punto per punto se la
-      ! mesh si deforma tra t=0 e t=1, cioe' se vertici_1 /= vertici_0)
-      DO i = 1, 4
-         g_xi(:, i)  = (1.0_dp - T_ref) * (V(2, i) - V(1, i)) + T_ref * (V(5, i) - V(4, i))
-         g_eta(:, i) = (1.0_dp - T_ref) * (V(3, i) - V(1, i)) + T_ref * (V(6, i) - V(4, i))
-         g_tau(:, i) = X_top(:, i) - X_base(:, i)
-      END DO
-
-      ! Componente x (indice 1) del prodotto vettoriale generalizzato 4D di
-      ! (g_xi, g_eta, g_tau): usa solo le componenti y,z,tau (indici 2,3,4)
-      N1 = g_xi(:,2) * (g_eta(:,3)*g_tau(:,4) - g_eta(:,4)*g_tau(:,3)) &
-         - g_xi(:,3) * (g_eta(:,2)*g_tau(:,4) - g_eta(:,4)*g_tau(:,2)) &
-         + g_xi(:,4) * (g_eta(:,2)*g_tau(:,3) - g_eta(:,3)*g_tau(:,2))
-
-      ! Peso di flusso locale, con segno: sostituisce sia dV che la vecchia nx costante
-      WV_CUB = W_ref * N1
-
-      DEALLOCATE(X_base, X_top, g_xi, g_eta, g_tau, N1)
-
-   END SUBROUTINE PrismQuad4D
+  END SUBROUTINE shiftingTriangleQuadrature
 
 
   SUBROUTINE TriangleQuadraturePoints(IntGaussP,IntGaussW,nIntGP,nGP) 
@@ -344,4 +272,4 @@ SUBROUTINE gaujac(x,w,n,alf,bet)
   RETURN
 END SUBROUTINE gaujac
 
-END MODULE PrismQuadratureGJ
+END MODULE triangleQuadratureGJ
