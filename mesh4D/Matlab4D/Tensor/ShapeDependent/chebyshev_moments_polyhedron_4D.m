@@ -63,7 +63,7 @@ for k = 3:num_facets
 
     [XYZTW, WV_X] = PrismQuad4D(V_prism, XI_ref, ETA_ref, T_ref, W_ref, baricentro_4D);
 
-    facet_moments = cubature_tens_chebyshev_facet_4D(XYZTW, WV_X, ade, chebyshev_indices, bbox);
+    facet_moments = cubature_tens_chebyshev_facet_4D(XYZTW, WV_X, chebyshev_indices, bbox);
 
     moments = moments + facet_moments;
 end

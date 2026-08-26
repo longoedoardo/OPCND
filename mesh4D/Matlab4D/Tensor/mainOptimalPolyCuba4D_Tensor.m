@@ -171,65 +171,65 @@ fprintf('........................\n');
 % Visualizzazione grafica
 %
 %**************************************************************************
-
-figure('Name', 'Evoluzione Geometrica 3D', 'Color', 'w');
-hold on; grid on; box on;
-
-col_t0 = [0.20 0.45 0.95]; % Blu per t = 0
-col_t1 = [0.95 0.30 0.35]; % Rosso per t = 1
-
-patch('Vertices', V0, 'Faces', tri, 'FaceColor', col_t0, 'FaceAlpha', 0.05, ...
-      'EdgeColor', col_t0, 'LineWidth', 1.0, 'DisplayName', 'Poliedro T=0');
-patch('Vertices', V1, 'Faces', tri, 'FaceColor', col_t1, 'FaceAlpha', 0.05, ...
-      'EdgeColor', col_t1, 'LineWidth', 1.0, 'DisplayName', 'Poliedro T=1');
-
-for i = 1:num_vertici
-    plot3([V0(i, 1) V1(i, 1)], [V0(i, 2) V1(i, 2)], [V0(i, 3) V1(i, 3)], ...
-          'k--', 'LineWidth', 0.6, 'HandleVisibility', 'off'); 
-end
-
-plot3(V0(:, 1), V0(:, 2), V0(:, 3), 'o', 'MarkerSize', 4, 'MarkerFaceColor', col_t0, 'MarkerEdgeColor', 'w', 'HandleVisibility', 'off');
-plot3(V1(:, 1), V1(:, 2), V1(:, 3), 'o', 'MarkerSize', 4, 'MarkerFaceColor', col_t1, 'MarkerEdgeColor', 'w', 'HandleVisibility', 'off');
-
-xlabel('X'); ylabel('Y'); zlabel('Z');
-title('Evoluzione geometrica: Poliedro tra T=0 e T=1');
-view(3); camlight; lighting gouraud; axis equal;
-legend('Location', 'northeast', 'Box', 'off');
-
-figure('Name', 'Prisma Spaziotemporale 4D', 'Color', 'w');
-hold on; grid on; box on;
-
-col_prisma_0 = [0.6, 0.85, 0.90];
-col_prisma_1 = [0.90, 0.60, 0.75];
-
-offset = [1.8 0 0];
-V1_vis = V1 + offset;
-
-patch('Vertices', V0, 'Faces', tri, 'FaceColor', col_t0, 'FaceAlpha', 0.05, ...
-      'EdgeColor', col_t0, 'LineStyle', ':', 'LineWidth', 1.1, 'DisplayName', 'Poliedro T=0');
-patch('Vertices', V1_vis, 'Faces', tri, 'FaceColor', col_t1, 'FaceAlpha', 0.05, ...
-      'EdgeColor', col_t1, 'LineStyle', ':', 'LineWidth', 1.1, 'DisplayName', 'Poliedro T=1');
-
-% Estrazione di un singolo prisma rappresentativo dalla mesh
-[~, k_prisma] = min(vecnorm(mean(V0(tri, :), 2) - mean(V0, 1), 2, 2));
-nodes = Hyperfacets{2 + k_prisma}.Vertices_ID;
-V_p = vertici_4D(nodes, :);
-V_prisma = [V_p(1:3, 1:3); V_p(4:6, 1:3) + offset];
-
-F_quad = [1 2 5 4; 2 3 6 5; 3 1 4 6];
-patch('Vertices', V_prisma, 'Faces', F_quad, 'FaceColor', col_prisma_0, 'FaceAlpha', 0.82, ...
-      'EdgeColor', [0.1 0.1 0.1], 'LineWidth', 1.7, 'DisplayName', 'Prisma 4D');
-patch('Vertices', V_prisma, 'Faces', [1 2 3], 'FaceColor', col_prisma_0, 'FaceAlpha', 0.5, 'EdgeColor', 'k', 'HandleVisibility', 'off');
-patch('Vertices', V_prisma, 'Faces', [4 5 6], 'FaceColor', col_prisma_1, 'FaceAlpha', 0.5, 'EdgeColor', 'k', 'HandleVisibility', 'off');
-
-for i = 1:3
-    plot3([V_prisma(i, 1) V_prisma(i+3, 1)], [V_prisma(i, 2) V_prisma(i+3, 2)], [V_prisma(i, 3) V_prisma(i+3, 3)], ...
-          'k-', 'LineWidth', 1.5, 'HandleVisibility', 'off');
-end
-scatter3(V_prisma(1:3, 1), V_prisma(1:3, 2), V_prisma(1:3, 3), 4, col_t0, 'filled', 'MarkerEdgeColor', 'w');
-scatter3(V_prisma(4:6, 1), V_prisma(4:6, 2), V_prisma(4:6, 3), 4, col_t1, 'filled', 'MarkerEdgeColor', 'w');
-
-title('Sezione di Prisma Spaziotemporale 4D');
-xlabel('X'); ylabel('Y'); zlabel('Z');
-axis equal; view(38, 24); camlight; lighting gouraud; material shiny;
-legend('Location', 'bestoutside', 'Box', 'off');
+% 
+% figure('Name', 'Evoluzione Geometrica 3D', 'Color', 'w');
+% hold on; grid on; box on;
+% 
+% col_t0 = [0.20 0.45 0.95]; % Blu per t = 0
+% col_t1 = [0.95 0.30 0.35]; % Rosso per t = 1
+% 
+% patch('Vertices', V0, 'Faces', tri, 'FaceColor', col_t0, 'FaceAlpha', 0.05, ...
+%       'EdgeColor', col_t0, 'LineWidth', 1.0, 'DisplayName', 'Poliedro T=0');
+% patch('Vertices', V1, 'Faces', tri, 'FaceColor', col_t1, 'FaceAlpha', 0.05, ...
+%       'EdgeColor', col_t1, 'LineWidth', 1.0, 'DisplayName', 'Poliedro T=1');
+% 
+% for i = 1:num_vertici
+%     plot3([V0(i, 1) V1(i, 1)], [V0(i, 2) V1(i, 2)], [V0(i, 3) V1(i, 3)], ...
+%           'k--', 'LineWidth', 0.6, 'HandleVisibility', 'off'); 
+% end
+% 
+% plot3(V0(:, 1), V0(:, 2), V0(:, 3), 'o', 'MarkerSize', 4, 'MarkerFaceColor', col_t0, 'MarkerEdgeColor', 'w', 'HandleVisibility', 'off');
+% plot3(V1(:, 1), V1(:, 2), V1(:, 3), 'o', 'MarkerSize', 4, 'MarkerFaceColor', col_t1, 'MarkerEdgeColor', 'w', 'HandleVisibility', 'off');
+% 
+% xlabel('X'); ylabel('Y'); zlabel('Z');
+% title('Evoluzione geometrica: Poliedro tra T=0 e T=1');
+% view(3); camlight; lighting gouraud; axis equal;
+% legend('Location', 'northeast', 'Box', 'off');
+% 
+% figure('Name', 'Prisma Spaziotemporale 4D', 'Color', 'w');
+% hold on; grid on; box on;
+% 
+% col_prisma_0 = [0.6, 0.85, 0.90];
+% col_prisma_1 = [0.90, 0.60, 0.75];
+% 
+% offset = [1.8 0 0];
+% V1_vis = V1 + offset;
+% 
+% patch('Vertices', V0, 'Faces', tri, 'FaceColor', col_t0, 'FaceAlpha', 0.05, ...
+%       'EdgeColor', col_t0, 'LineStyle', ':', 'LineWidth', 1.1, 'DisplayName', 'Poliedro T=0');
+% patch('Vertices', V1_vis, 'Faces', tri, 'FaceColor', col_t1, 'FaceAlpha', 0.05, ...
+%       'EdgeColor', col_t1, 'LineStyle', ':', 'LineWidth', 1.1, 'DisplayName', 'Poliedro T=1');
+% 
+% % Estrazione di un singolo prisma rappresentativo dalla mesh
+% [~, k_prisma] = min(vecnorm(mean(V0(tri, :), 2) - mean(V0, 1), 2, 2));
+% nodes = Hyperfacets{2 + k_prisma}.Vertices_ID;
+% V_p = vertici_4D(nodes, :);
+% V_prisma = [V_p(1:3, 1:3); V_p(4:6, 1:3) + offset];
+% 
+% F_quad = [1 2 5 4; 2 3 6 5; 3 1 4 6];
+% patch('Vertices', V_prisma, 'Faces', F_quad, 'FaceColor', col_prisma_0, 'FaceAlpha', 0.82, ...
+%       'EdgeColor', [0.1 0.1 0.1], 'LineWidth', 1.7, 'DisplayName', 'Prisma 4D');
+% patch('Vertices', V_prisma, 'Faces', [1 2 3], 'FaceColor', col_prisma_0, 'FaceAlpha', 0.5, 'EdgeColor', 'k', 'HandleVisibility', 'off');
+% patch('Vertices', V_prisma, 'Faces', [4 5 6], 'FaceColor', col_prisma_1, 'FaceAlpha', 0.5, 'EdgeColor', 'k', 'HandleVisibility', 'off');
+% 
+% for i = 1:3
+%     plot3([V_prisma(i, 1) V_prisma(i+3, 1)], [V_prisma(i, 2) V_prisma(i+3, 2)], [V_prisma(i, 3) V_prisma(i+3, 3)], ...
+%           'k-', 'LineWidth', 1.5, 'HandleVisibility', 'off');
+% end
+% scatter3(V_prisma(1:3, 1), V_prisma(1:3, 2), V_prisma(1:3, 3), 4, col_t0, 'filled', 'MarkerEdgeColor', 'w');
+% scatter3(V_prisma(4:6, 1), V_prisma(4:6, 2), V_prisma(4:6, 3), 4, col_t1, 'filled', 'MarkerEdgeColor', 'w');
+% 
+% title('Sezione di Prisma Spaziotemporale 4D');
+% xlabel('X'); ylabel('Y'); zlabel('Z');
+% axis equal; view(38, 24); camlight; lighting gouraud; material shiny;
+% legend('Location', 'bestoutside', 'Box', 'off');

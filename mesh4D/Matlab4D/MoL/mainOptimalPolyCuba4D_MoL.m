@@ -46,28 +46,76 @@ vertici_finali   = load('vertex_new.dat');% Configurazione a tau = 1
 %
 %**************************************************************************
 
-N_cc = n_tau - 1;
+% La formula di Clenshaw-Curtis utilizza i nodi di Chebyshev-Lobatto 
+% 
+% x_i = cos(i*pi/N)
+%
+% con i = 0,...,N, sull'intervallo [-1,1]. I nodi vengono successivamente 
+% trasformati nell'intervallo [0,1].
 
-theta      = pi * (0:N_cc)' / N_cc;
-nodes_cheb = cos(theta);
-tau_nodes  = flipud((nodes_cheb + 1) / 2);
+% Se n_tau è il numero totale di nodi, allora il numero di
+% sottointervalli è N = n_tau - 1.
+num_intervalli = n_tau - 1;
 
-j = (1:floor(N_cc/2))';           % indici j, vettore colonna
-fact = 2 * ones(size(j));
-if mod(N_cc,2) == 0
-    fact(end) = 1;                 % j = N_cc/2 -> fattore 1
+theta = pi * (0:num_intervalli)' / num_intervalli;
+nodiChebLob = cos(theta);
+
+
+% Trasformazione affine da [-1,1] a [0,1]: map di x in (x+1)/2. Uso flipud 
+% per riordinare i nodi in ordine crescente
+
+tau_nodi = flipud((nodiChebLob + 1) / 2);
+
+% Nella formula dei pesi compaiono i termini pari, cos(2*j*theta). Sono 
+% quindi necessari gli indici j = 1,...,floor(N/2).
+
+indici_serie = (1:floor(num_intervalli/2))';
+
+% Coefficienti che moltiplicano i termini della serie.
+
+coefficienti_serie = 2 * ones(size(indici_serie));
+
+% Se N è pari, l'ultimo termine della serie corrisponde a j = N/2.
+% In questo caso il suo coefficiente deve essere 1 anziché 2.
+
+if mod(num_intervalli, 2) == 0
+    coefficienti_serie(end) = 1;
 end
 
-% Matrice (n_tau x length(j)): termine cos(2*j*theta_i)/(1-4*j^2)
-% per ogni combinazione di nodo i e indice j
-M = cos(2 * theta * j') ./ (1 - 4 * j'.^2);   % broadcasting: theta (n_tau x1), j' (1 x nj)
-sum_w = M * fact;                              % somma su j per ogni i (n_tau x 1)
+% Costruiamo una matrice in cui ogni riga corrisponde a un nodo theta_i;
+% e ogni colonna corrisponde a un indice j. L'elemento (i,j) è
+% [cos(2*j*theta_i)] / [1 - 4*j^2] che compare nella formula dei 
+% pesi di Clenshaw-Curtis.
 
-g_cc = ones(n_tau,1);
-g_cc([1 end]) = 0.5;
+termini_serie = cos(2 * theta * indici_serie')./ (1 - 4 * indici_serie'.^2);
 
-tau_weights = (1/N_cc) * g_cc .* (1 + sum_w);
-tau_weights = flipud(tau_weights);
+% Sommiamo i termini della serie pesandoli con i coefficienti
+% precedentemente definiti.
+
+somma_serie = termini_serie * coefficienti_serie;
+
+% Nella formula dei pesi, i nodi agli estremi theta = 0 e theta = pi
+% hanno un fattore 1/2. Per tutti gli altri nodi il fattore vale 1.
+
+fattore_estremi = ones(n_tau, 1);
+
+fattore_estremi([1, end]) = 0.5;
+
+% Formula dei pesi sull'intervallo [-1,1]: w_i = 1/N * fattore_i * (1 + somma_serie_i).
+% Poiché i nodi sono stati trasformati nell'intervallo [0,1],
+% la stessa formula viene utilizzata con la corrispondente
+% normalizzazione.
+
+tau_pesi = ...
+    (1 / num_intervalli) ...
+    * fattore_estremi ...
+    .* (1 + somma_serie);
+
+% I nodi di Chebyshev erano inizialmente ordinati da 1 a 0.
+% Dopo flipud, i nodi tau_nodi sono invece ordinati da 0 a 1. 
+% I pesi devono avere lo stesso ordinamento dei nodi.
+
+tau_pesi = flipud(tau_pesi);
 
 %**************************************************************************
 %
@@ -102,7 +150,7 @@ coeffs = tenscheb_norm2sq(chebyshev_indices);
 %**************************************************************************
 I_4D = 0;
 for k = 1:n_tau
-    current_tau = tau_nodes(k); 
+    current_tau = tau_nodi(k); 
 
     vertices_tau = (1 - current_tau) * vertici_iniziali + current_tau * vertici_finali;
 
@@ -126,7 +174,7 @@ for k = 1:n_tau
     feval = f(XYZW_tens(:,1), XYZW_tens(:,2), XYZW_tens(:,3), current_tau * ones(size(XYZW_tens(:,1))));
 
     W = XYZW(:,4);
-    I_4D = I_4D + sum((tau_weights(k) * W) .* feval);
+    I_4D = I_4D + sum((tau_pesi(k) * W) .* feval);
 end
 
 fprintf('Integrale: %1.15e\n', I_4D);
