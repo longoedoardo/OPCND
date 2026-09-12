@@ -87,7 +87,7 @@ Matlab3D/examples/
 L'interfaccia principale è:
 
 ```matlab
-I = OptimalPolyCuba3D(ade, vertices, facets, f)
+[XYZ, W] = OptimalPolyCuba3D(ade, vertices, facets)
 ```
 
 dove:
@@ -100,7 +100,7 @@ dove:
   triangolari;
 - `f` è un function handle MATLAB che rappresenta la funzione integranda.
 
-La funzione restituisce l'approssimazione numerica dell'integrale. La funzione integranda deve essere vettorializzata.
+La funzione restituisce i nodi di quadratura ed i relativi pesi.
 
 ---
 
