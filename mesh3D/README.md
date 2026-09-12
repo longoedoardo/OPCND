@@ -429,41 +429,9 @@ Il confronto con l'esempio MATLAB consente inoltre di verificare la coerenza num
 ## Integrazione di funzioni polinomiali
 
 
-Il dominio considerato è il cubo
+Il dominio considerato è il cubo la cui geometria viene definita direttamente all'interno dell'esempio.
 
-\[
-\Omega=[-1,1]^3,
-\]
-
-la cui geometria viene definita direttamente all'interno dell'esempio.
-
-Vengono considerate tre funzioni polinomiali:
-
-\[
-f_1(x,y,z)=1,
-\]
-
-\[
-f_2(x,y,z)=x^2+y^2+z^2,
-\]
-
-\[
-f_3(x,y,z)=x^2y^2z^2.
-\]
-
-I corrispondenti integrali esatti sono
-
-\[
-I_1=8,
-\]
-
-\[
-I_2=8,
-\]
-
-\[
-I_3=\frac{8}{27}.
-\]
+Vengono considerate tre funzioni polinomiali e i relativi integrali.
 
 ### MATLAB
 
