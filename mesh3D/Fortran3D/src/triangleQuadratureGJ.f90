@@ -1,31 +1,37 @@
 MODULE triangleQuadratureGJ
-  USE TypesDef, ONLY: dp
+
+  USE TypesDef
+
   !**********************************************************************
   ! Quadratura di Gauss-Jacobi su un triangolo generico (3D), ottenuta
   ! mediante shifting affine dei punti/pesi calcolati sul triangolo di
   ! riferimento (0,0), (1,0), (0,1) tramite prodotto conico di formule
   ! 1D di Gauss-Jacobi.
   !**********************************************************************
+
   IMPLICIT NONE
 
 CONTAINS
 
   SUBROUTINE shiftingTriangleQuadrature(V, nGP, P, W)
-    !**********************************************************************
+
     IMPLICIT NONE
-    !**********************************************************************
-    ! Argument list                                                          
+    !**********************************************************************    
+    ! Argomenti
+    !**********************************************************************                                                    
     REAL(dp),    INTENT(IN)                  :: V(3,3)  ! Vertici del triangolo, per riga
     INTEGER, INTENT(IN)                      :: nGP     ! N. punti di Gauss-Jacobi 1D
     REAL(dp),    ALLOCATABLE, INTENT(OUT)    :: P(:,:)  ! Punti quadratura reali (n_points,3)
     REAL(dp),    ALLOCATABLE, INTENT(OUT)    :: W(:)    ! Pesi quadratura reali (n_points)
     !**********************************************************************
-    ! Local variables                                                        
+    ! Variabili locali                             
+    !**********************************************************************                        
     INTEGER                                  :: i, n_points
     REAL(dp)                                 :: Area
     REAL(dp)                                 :: A(3), B(3)
-    REAL(dp), ALLOCATABLE                    :: P_std(:,:), W_std(:)   ! Punti/pesi sul triangolo di riferimento
+    REAL(dp), ALLOCATABLE                    :: P_std(:,:), W_std(:)   ! Punti e pesi sul triangolo di riferimento
     !**********************************************************************
+
     n_points = nGP * nGP
 
     ALLOCATE(P_std(2, n_points))
@@ -65,27 +71,28 @@ CONTAINS
 
 
   SUBROUTINE TriangleQuadraturePoints(IntGaussP,IntGaussW,nIntGP,nGP) 
-    !**********************************************************************
-    IMPLICIT NONE
-    !**********************************************************************
-    ! Argument list declaration                                               
-    INTEGER                            :: nIntGP         ! Number of 2D integration points 
-    REAL(dp)                           :: IntGaussP(2,nGP*nGP) ! Positions of 2D int. points 
-    REAL(dp)                           :: IntGaussW(nGP*nGP)   ! Weights of 2D int. points  
-    INTEGER                            :: nGP            ! Number of 1D Gausspoints        
-    !**********************************************************************
-    ! Local variable declaration                                              
-    INTEGER                :: i,j                  ! Loop counters                   
-    INTEGER                :: iIntGP               ! Loop counter                    
-    REAL(dp)               :: tol                  ! Tolerance of 0.0                
-    REAL(dp)               :: mu1(nGP)             ! 1D quadrature positions in y1   
-    REAL(dp)               :: mu2(nGP)             ! 1D quadrature positions in y2   
-    REAL(dp)               :: A1(nGP)              ! 1D quadrature weights for y1    
-    REAL(dp)               :: A2(nGP)              ! 1D quadrature weights for y2    
-    !**********************************************************************
-    INTENT(IN)             :: nGP 
-    INTENT(OUT)            :: IntGaussP, IntGaussW 
-    !**********************************************************************
+
+   IMPLICIT NONE
+
+   !**********************************************************************
+   ! Argomenti
+   !**********************************************************************
+   INTEGER, INTENT(IN) :: nGP
+   INTEGER, INTENT(OUT) :: nIntGP
+   REAL(dp), INTENT(OUT) :: IntGaussP(2, nGP*nGP)
+   REAL(dp), INTENT(OUT) :: IntGaussW(nGP*nGP)
+
+   !**********************************************************************
+   ! Variabili locali
+   !**********************************************************************
+   INTEGER :: i, j
+   INTEGER :: iIntGP
+
+   REAL(dp) :: tol
+   REAL(dp) :: mu1(nGP)
+   REAL(dp) :: mu2(nGP)
+   REAL(dp) :: A1(nGP)
+   REAL(dp) :: A2(nGP)
     tol = 1.0 / (10.0**(PRECISION(1.0)-2) )                                   
     !**********************************************************************                                                                         
     ! Quadrature points are defined by the conical product of 1D Gauss-Jacobi 
@@ -127,14 +134,14 @@ CONTAINS
   REAL(dp)             :: gammln,xx
   INTEGER          :: j
   REAL(dp)             :: ser,stp,tmp,x,y,cof(6)
-  PARAMETER(stp=  2.5066282746310005  )
+  PARAMETER(stp=  2.5066282746310005_dp  )
   PARAMETER(cof= (/           &
-       76.18009172947146    , &
-       -86.50532032941677   , &
-       24.01409824083091    , &
-       -1.231739572450155   , &
-       .1208650973866179e-2 , &
-       -.5395239384953e-5    /)       )
+       76.18009172947146_dp    , &
+       -86.50532032941677_dp   , &
+       24.01409824083091_dp    , &
+       -1.231739572450155_dp   , &
+       .1208650973866179e-2_dp , &
+       -.5395239384953e-5_dp    /)       )
   !**********************************************************************
   INTENT(IN) :: xx
   !**********************************************************************
@@ -200,16 +207,15 @@ END SUBROUTINE gauleg
 
 SUBROUTINE gaujac(x,w,n,alf,bet)
   !**********************************************************************
-  INTEGER ::  n,MAXIT
-  REAL(dp)    ::  alf,bet,w(n),x(n)
+  INTEGER ::  MAXIT
+  INTEGER, INTENT(IN) :: n
+   REAL(dp), INTENT(IN) :: alf, bet
+   REAL(dp), INTENT(OUT) :: x(n), w(n)
   REAL(dp)    :: EPS
   INTEGER :: i,its,j,pr
   REAL(dp)    :: alfbet,an,bn,r1,r2,r3
   REAL(dp)    :: a,b,c,p1,p2,p3,pp,temp,z,z1
   REAL(dp)    :: test
-  !**********************************************************************
-  INTENT(IN)  :: n, alf, bet
-  INTENT(OUT) :: x,w
   !**********************************************************************
   test = 1. 
   MAXIT=50

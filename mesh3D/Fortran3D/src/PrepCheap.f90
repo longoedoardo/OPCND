@@ -5,15 +5,17 @@ MODULE PrepCheap
     CONTAINS
 
     SUBROUTINE cub_gausscheb_tens3D(deg, xyzw)
+
+    USE TypesDef, ONLY: dp, PI
+    
     !*******************************************************************************
     ! Calcola i punti e i pesi per l'integrazione numerica in 3D.
     ! Utilizza una griglia a prodotto tensoriale basata sui nodi di Gauss-Chebyshev.
     !*******************************************************************************
         INTEGER, INTENT(IN)                     :: deg
-        REAL, ALLOCATABLE, INTENT(OUT)          :: xyzw(:,:)
-        REAL, PARAMETER                         :: PI = 3.14159265358979323846
+        REAL(dp), ALLOCATABLE, INTENT(OUT)      :: xyzw(:,:)
         INTEGER                                 :: n,n3,i,j,k, idx
-        REAL, ALLOCATABLE                       :: x(:), w(:)
+        REAL(dp), ALLOCATABLE                   :: x(:), w(:)
 
         n = (deg+2)/2
         n3 = n**3
@@ -28,8 +30,8 @@ MODULE PrepCheap
         ALLOCATE(w(n))
 
         DO i = 1,n
-            x(i) = cos( ((2.0 * i - 1.0) * PI) / (2.0 * n) )
-            w(i) = PI / real(n)
+            x(i) = cos( ((2.0_dp * i - 1.0_dp) * PI) / (2.0_dp * n) )
+            w(i) = PI / REAL(n, dp)
         END DO
 
         idx = 1

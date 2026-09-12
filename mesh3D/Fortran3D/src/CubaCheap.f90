@@ -16,22 +16,23 @@ MODULE CubaCheap
    !*******************************************************************************
 
       IMPLICIT NONE
-
-      ! Input variables
+      !*******************************************************************************
+      ! Argomenti
+      !*******************************************************************************
       INTEGER, INTENT(IN)                                   :: deg
       REAL(dp), INTENT(IN)                                  :: X(:,:)
       INTEGER, INTENT(IN)                                   :: duples(:,:) 
-
-      ! Output variables
       REAL(dp), ALLOCATABLE, INTENT(OUT)                    :: V(:,:)
-
-      ! Local variables
+      !*******************************************************************************
+      ! Variabili locali
+      !*******************************************************************************
       INTEGER                                               :: m, d, N, i, k, col, g
       REAL(dp)                                              :: min_val, max_val
       REAL(dp), ALLOCATABLE                                 :: dbox(:,:)
       REAL(dp), ALLOCATABLE                                 :: map(:,:)
       REAL(dp), ALLOCATABLE                                 :: T_dim(:,:,:)
-      
+      !*******************************************************************************
+
       m = SIZE(X,1)
       d = SIZE(X,2)
       N = SIZE(duples,1)
@@ -87,15 +88,17 @@ MODULE CubaCheap
 
       IMPLICIT NONE
 
-      ! Input variables 
-      INTEGER, intent(in)             :: chebyshev_indices(:, :)
-
-      ! Output variables
-      REAL(dp), ALLOCATABLE, intent(out) :: coeffs(:)
-
-      ! Local variables
+      !*******************************************************************************
+      ! Argomenti
+      !*******************************************************************************
+      INTEGER, INTENT(IN)             :: chebyshev_indices(:, :)
+      REAL(dp), ALLOCATABLE, INTENT(OUT) :: coeffs(:)
+      !*******************************************************************************
+      ! Variabili locali
+      !*******************************************************************************
       INTEGER                         :: i, n
       REAL(dp)                        :: non_zero_counter
+      !*******************************************************************************
 
       n = size(chebyshev_indices, 1)
 
@@ -124,32 +127,41 @@ MODULE CubaCheap
 
       IMPLICIT NONE
 
-      ! Input variables
+      !*******************************************************************************
+      ! Argomenti
+      !*******************************************************************************
       REAL(dp), INTENT(IN)    :: vertices(:, :)
       INTEGER, INTENT(IN)    :: facets(:, :)
       INTEGER, INTENT(IN)    :: ade
       INTEGER, INTENT(IN)    :: chebyshev_indices(:, :)
       REAL(dp), INTENT(IN)    :: dbox(6)
-
-      ! Output variables
       REAL(dp), INTENT(OUT), ALLOCATABLE :: moments(:)
-
-      ! Local variables
+      !*******************************************************************************
+      ! Variabili locali
+      !*******************************************************************************
       INTEGER                :: num_indici, n_facce, k
       INTEGER                :: v1_idx, v2_idx, v3_idx
-      REAL(dp)                :: A(3), B(3), C(3)
-      REAL(dp)                :: vec1(3), vec2(3), cp(3), area2
+      INTEGER                :: nGP
+      REAL(dp) :: A(3), B(3), C(3)
+      REAL(dp) :: V_face(3,3)
+      REAL(dp) :: vec1(3), vec2(3), cp(3), area2
       REAL(dp), PARAMETER     :: tol = 1.0d-14
-      
-      ! Variabili per la quadratura
       REAL(dp), ALLOCATABLE   :: XYZW(:, :)     
       REAL(dp), ALLOCATABLE   :: WV_CUB(:)      
       REAL(dp)                :: norm_ext(3)    
       REAL(dp), ALLOCATABLE   :: chebyshev_moms(:, :)
       REAL(dp), ALLOCATABLE   :: moms_facet_raw(:)
+      !*******************************************************************************
 
       num_indici = SIZE(chebyshev_indices, 1)
       n_facce = SIZE(facets, 1)
+
+      ! Numero di punti di Gauss-Jacobi 1D necessari per integrare esattamente
+      ! sul triangolo un polinomio di grado (ade+1) (il grado sale di 1 per
+      ! effetto della primitiva usata nel teorema della divergenza): con nGP
+      ! punti la formula e' esatta fino al grado 2*nGP-1, quindi basta
+      ! nGP = ceil((ade+2)/2).
+      nGP = CEILING((ade + 2.0_dp)/2.0_dp)
 
       ALLOCATE(chebyshev_moms(num_indici, n_facce))
       chebyshev_moms = 0.0_dp
@@ -162,6 +174,10 @@ MODULE CubaCheap
          A = vertices(v1_idx, :)
          B = vertices(v2_idx, :)
          C = vertices(v3_idx, :)
+
+         V_face(1,:) = A
+         V_face(2,:) = B
+         V_face(3,:) = C
 
          vec1 = B - A
          vec2 = C - A
@@ -178,7 +194,7 @@ MODULE CubaCheap
 
          norm_ext = cp / area2
 
-         CALL shiftingTriangleQuadrature(VERTICES((/v1_idx, v2_idx, v3_idx/), :), ade, XYZW, WV_CUB)
+         CALL shiftingTriangleQuadrature(V_face, nGP, XYZW, WV_CUB)
 
          CALL cubature_tens_chebyshev_facet_V(XYZW, WV_CUB, chebyshev_indices, dbox, moms_facet_raw)
 
@@ -203,16 +219,17 @@ MODULE CubaCheap
 
       IMPLICIT NONE
 
-      ! Input variables
+      !*******************************************************************************
+      ! Argomenti
+      !*******************************************************************************
       REAL(dp), INTENT(IN)    :: nodes(:, :)        
       REAL(dp), INTENT(IN)    :: weights(:)         
       INTEGER, INTENT(IN)    :: chebyshev_indices(:, :) 
       REAL(dp), INTENT(IN)    :: dbox(6)
-
-      ! Output variables
       REAL(dp), ALLOCATABLE, INTENT(OUT)   :: chebyshev_moms(:)  
-
-      ! Local variables
+      !*******************************************************************************
+      ! Variabili locali
+      !*******************************************************************************
       INTEGER                :: n, m, deg_max, c, iv
       REAL(dp)                :: B1
       REAL(dp), ALLOCATABLE   :: XN(:), YN(:), ZN(:)
@@ -223,6 +240,7 @@ MODULE CubaCheap
       REAL(dp), ALLOCATABLE   :: TYTZ(:, :), F(:, :)
       REAL(dp), ALLOCATABLE   :: w(:)
       INTEGER, ALLOCATABLE   :: i_vec(:)
+      !*******************************************************************************
 
       n = SIZE(nodes, 1)
       m = SIZE(chebyshev_indices, 1)
@@ -308,16 +326,18 @@ MODULE CubaCheap
 
       IMPLICIT NONE
 
-      ! Input variables
+      !*******************************************************************************
+      ! Argomenti
+      !*******************************************************************************
       INTEGER, INTENT(IN)    :: deg
       REAL(dp), INTENT(IN)    :: x(:)
-
-      ! Output variables
       REAL(dp), INTENT(OUT)   :: T(:, :)
-
-      ! Local variables
+      !*******************************************************************************
+      ! Variabili locali
+      !*******************************************************************************
       INTEGER                :: n, j
       REAL(dp), ALLOCATABLE   :: t0(:), t1(:), t2(:)
+      !*******************************************************************************
 
       n = SIZE(x)
 
@@ -352,16 +372,18 @@ MODULE CubaCheap
 
       IMPLICIT NONE
 
-      ! Input variables
+      !*******************************************************************************
+      ! Argomenti
+      !*******************************************************************************
       REAL(dp), INTENT(IN)  :: XYZW_tens_ref(:,:)
       REAL(dp), INTENT(IN)  :: dbox(6)
-
-      ! Output variables
       REAL(dp), ALLOCATABLE, INTENT(OUT) :: XYZW_tens(:,:)
-      
-      ! Local variables
+      !*******************************************************************************
+      ! Variabili locali
+      !*******************************************************************************
       REAL(dp) :: a, b
-
+      !*******************************************************************************
+      
       IF (ALLOCATED(XYZW_tens)) DEALLOCATE(XYZW_tens)
       ALLOCATE(XYZW_tens(SIZE(XYZW_tens_ref, 1), SIZE(XYZW_tens_ref, 2)))
 

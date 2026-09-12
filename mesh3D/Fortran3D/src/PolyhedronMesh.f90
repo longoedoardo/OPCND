@@ -4,9 +4,9 @@ MODULE PolyhedronMesh
 
     ! Definizione della struttura dei dati
     TYPE :: t_polyhedron
-        REAL, ALLOCATABLE                   :: vertici(:,:) 
-        INTEGER, ALLOCATABLE                :: facce(:,:)   
-        REAL                                :: bbox(6)    
+        REAL(dp), ALLOCATABLE               :: vertici(:,:)
+        INTEGER, ALLOCATABLE                :: facce(:,:)
+        REAL(dp)                            :: bbox(6)
     END TYPE t_polyhedron
 
 CONTAINS
@@ -43,7 +43,9 @@ CONTAINS
 
         ! Calcolo della bounding box, prendo l'intera prima colonna e analizzo prendendo il max o il min, il risultato
         ! finale e' un vettore di 6 valori che viene inserito in poly%bbox
-        poly%bbox = [MINVAL(poly%vertici(:,1)), MAXVAL(poly%vertici(:,1)), MINVAL(poly%vertici(:,2)), MAXVAL(poly%vertici(:,2)), MINVAL(poly%vertici(:,3)), MAXVAL(poly%vertici(:,3))]
+        poly%bbox = [ MINVAL(poly%vertici(:,1)), MAXVAL(poly%vertici(:,1)), &
+                      MINVAL(poly%vertici(:,2)), MAXVAL(poly%vertici(:,2)), &
+                      MINVAL(poly%vertici(:,3)), MAXVAL(poly%vertici(:,3)) ]
 
     END SUBROUTINE MeshReader
 
