@@ -2,7 +2,7 @@ function [XYZ, W] = OptimalPolyCuba3D(ade, vertices, facets)
 
 %**************************************************************************
 %
-% function I = OptimalPolyCuba3D(ade, vertices, facets, f)
+% function [XYZ, W] = OptimalPolyCuba3D(ade, vertices, facets)
 %
 % Calcola un'approssimazione numerica di un integrale di volume
 % tridimensionale su un dominio poliedrico rappresentato mediante
@@ -27,12 +27,11 @@ function [XYZ, W] = OptimalPolyCuba3D(ade, vertices, facets)
 %       triangolare. Ogni riga contiene gli indici dei tre vertici che
 %       definiscono una faccia triangolare.
 %
-%   - f:
-%       Function handle che rappresenta la funzione integranda f(x,y,z).
-%
 %   OUTPUT:
-%   - I:
-%       Approssimazione numerica dell'integrale di volume
+%   - XYZ:
+%       Nodi di quadratura
+%   - W:
+%       Pesi relativi ai nodi di quadratura
 %
 %**************************************************************************
 %
