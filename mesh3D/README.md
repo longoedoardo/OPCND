@@ -1,8 +1,5 @@
 # OptimalPolyCuba3D
 
-Regole di cubatura numerica per l'integrazione di funzioni su domini
-poliedrali tridimensionali.
-
 Questa directory contiene l'implementazione tridimensionale del metodo
 **OptimalPolyCuba3D**, basato sulla costruzione di regole di cubatura
 mediante una base tensoriale di polinomi di Chebyshev e il calcolo dei
@@ -90,7 +87,7 @@ Matlab3D/examples/
 L'interfaccia principale è:
 
 ```matlab
-I = OptimalPolyCuba3D(ade, vertices, facets, f)
+[XYZ, W] = OptimalPolyCuba3D(ade, vertices, facets)
 ```
 
 dove:
@@ -103,16 +100,14 @@ dove:
   triangolari;
 - `f` è un function handle MATLAB che rappresenta la funzione integranda.
 
-La funzione restituisce l'approssimazione numerica dell'integrale. La funzione integranda deve essere vettorializzata.
+La funzione restituisce i nodi di quadratura ed i relativi pesi.
 
 ---
 
 # Rappresentazione del dominio
 
 Il dominio tridimensionale è rappresentato mediante una **mesh
-superficiale triangolare chiusa**.
-
-La geometria è descritta dalle due matrici:
+superficiale triangolare chiusa**. La geometria è descritta dalle due matrici:
 
 ```matlab
 vertices
@@ -125,105 +120,26 @@ facets
 ```
 
 La matrice `vertices` contiene, per ogni riga, le coordinate di un
-vertice:
-
-```text
-[x_i, y_i, z_i]
-```
-
-La matrice `facets` contiene, per ogni riga, gli indici dei tre vertici
+vertice. La matrice `facets` contiene, per ogni riga, gli indici dei tre vertici
 che costituiscono una faccia triangolare.
 
-Ad esempio:
-
-```matlab
-vertices = load('convex_vertex.dat');
-facets   = load('convex_tri.dat');
-```
+---
 
 ## Orientamento delle facce
 
-L'orientamento delle facce è fondamentale.
-
-I vertici di ciascun triangolo devono essere ordinati in modo coerente
-così che il prodotto vettoriale associato alla faccia produca una
-**normale orientata verso l'esterno del dominio**.
-
+L'orientamento delle facce è fondamentale. I vertici di ciascun triangolo devono 
+essere ordinati in modo coerente così che il prodotto vettoriale associato 
+alla faccia produca una **normale orientata verso l'esterno del dominio**.
 La mesh deve inoltre essere:
 
 1. chiusa;
 2. composta da facce triangolari;
 3. orientata coerentemente;
-4. priva di buchi, se deve essere utilizzata come frontiera di un
-   dominio volumetrico chiuso.
+4. priva di buchi.
 
 Queste condizioni sono necessarie perché i momenti geometrici vengono
 calcolati a partire dalla rappresentazione superficiale del dominio,
 utilizzando una formulazione basata sul teorema della divergenza.
-
----
-
-# Descrizione del metodo
-
-La costruzione della regola di cubatura può essere suddivisa in due
-componenti principali:
-
-- una parte **shape-independent**;
-- una parte **shape-dependent**.
-
-## Parte shape-independent
-
-La parte indipendente dalla geometria utilizza una regola tensoriale
-di Gauss-Chebyshev definita sul cubo di riferimento.
-
-La base polinomiale viene costruita utilizzando polinomi di Chebyshev
-tensoriali, considerando i multi-indici fino al grado polinomiale totale
-`ade`.
-
-Le principali operazioni sono:
-
-- costruzione della griglia tensoriale di Gauss-Chebyshev;
-- generazione dei multi-indici;
-- costruzione della matrice di Vandermonde-Chebyshev;
-- calcolo dei coefficienti di normalizzazione della base.
-
-Le funzioni principali coinvolte sono:
-
-```text
-cub_gausscheb_tens3D.m
-dCHEBVAND.m
-mono_next_grlex.m
-tenscheb_norm2sq.m
-```
-
----
-
-## Parte shape-dependent
-
-La geometria del dominio entra nella costruzione della regola attraverso
-i momenti della base di Chebyshev sul dominio poliedrale.
-
-I momenti vengono calcolati a partire dalla mesh superficiale triangolare
-mediante una formulazione basata sul teorema della divergenza.
-
-Le principali funzioni coinvolte sono:
-
-```text
-chebyshev_moments_polyhedron.m
-cubature_tens_chebyshev_facet_V.m
-TriangleQuadraturePoints.m
-mapTrianglePoints.m
-```
-
-La regola definita sul dominio di riferimento viene successivamente
-trasformata sulla bounding box del dominio fisico mediante:
-
-```text
-scale_rule.m
-```
-
-I pesi finali della regola di cubatura sono quindi ottenuti combinando
-la parte indipendente dalla geometria con i momenti specifici del dominio.
 
 ---
 
@@ -317,14 +233,6 @@ agli esempi elementari.
 Gli script presenti nella directory `examples/` sono progettati per
 essere indipendenti dalla directory di lavoro corrente di MATLAB.
 
-Ad esempio, per eseguire:
-
-```text
-example_convex.m
-```
-
-è possibile aprire il file in MATLAB ed eseguirlo direttamente.
-
 Gli script determinano automaticamente la posizione della directory
 principale `Matlab3D` tramite:
 
@@ -343,44 +251,6 @@ Matlab3D/src/
 ```
 
 senza assumere una specifica directory di lavoro.
-
----
-
-# Utilizzo su una mesh personalizzata
-
-Per utilizzare `OptimalPolyCuba3D` su una mesh diversa è sufficiente
-fornire le matrici `vertices` e `facets` della nuova geometria.
-
-Un esempio minimale è:
-
-```matlab
-clear;
-clc;
-close all;
-
-projectRoot = fileparts(fileparts(mfilename('fullpath')));
-
-addpath(projectRoot);
-addpath(fullfile(projectRoot, 'src'));
-
-vertices = load(fullfile(projectRoot, ...
-    'examples', 'convex_vertex.dat'));
-
-facets = load(fullfile(projectRoot, ...
-    'examples', 'convex_tri.dat'));
-
-ade = 2;
-
-f = @(x,y,z) x.^2 + y.^2 + z.^2;
-
-I = OptimalPolyCuba3D(ade, vertices, facets, f);
-
-fprintf('Integrale numerico: %.15e\n', I);
-```
-
-Per utilizzare una mesh personalizzata è necessario rispettare le
-ipotesi sulla rappresentazione geometrica descritte nella sezione
-precedente.
 
 ---
 
