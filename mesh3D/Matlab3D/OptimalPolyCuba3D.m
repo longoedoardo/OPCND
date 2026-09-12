@@ -1,33 +1,54 @@
+function [XYZ, W] = OptimalPolyCuba3D(ade, vertices, facets)
+
 %**************************************************************************
 %
-%                         MAIN OptimalPolyCuba3D
+% function I = OptimalPolyCuba3D(ade, vertices, facets, f)
+%
+% Calcola un'approssimazione numerica di un integrale di volume
+% tridimensionale su un dominio poliedrico rappresentato mediante
+% una mesh superficiale triangolare chiusa.
+%
+% La regola di cubatura è costruita combinando una base di Chebyshev
+% tensoriale shape-independent con i momenti shape-dependent calcolati
+% a partire dalla rappresentazione superficiale del dominio poliedrico.
 %
 %**************************************************************************
 %
-% Metodo che calcola l'integrale di una funzione f(x,y,z) su un poliedro 
-% definito, usando grado algebrico di esattezza "ade".
-% 
-% INPUT:
-%   vertices : Matrice N x 3 dei vertici [x, y, z]
-%   facets   : Struttura o cell array delle facce
-%   ade      : Grado di esattezza algebrica
-%   f        : Function handle della funzione integranda
+%   INPUTS:
+%   - ade:
+%       Grado polinomiale totale massimo della regola di cubatura.
+%
+%   - vertices:
+%       Matrice N x 3 contenente le coordinate cartesiane dei vertici
+%       della mesh. Ogni riga rappresenta un vertice [x_i, y_i, z_i].
+%
+%   - facets:
+%       Matrice M x 3 contenente la connettività della mesh superficiale
+%       triangolare. Ogni riga contiene gli indici dei tre vertici che
+%       definiscono una faccia triangolare.
+%
+%   - f:
+%       Function handle che rappresenta la funzione integranda f(x,y,z).
+%
+%   OUTPUT:
+%   - I:
+%       Approssimazione numerica dell'integrale di volume
+%
+%**************************************************************************
+%
+%   Autore:
+%       Edoardo Longo, Università degli Studi di Verona
+%
+%   Data:
+%       Settembre 2026
 %
 %**************************************************************************
 
-addpath('ShapeIndependent/');
-addpath('ShapeDependent/');
+% Percorso della directory principale del progetto
+projectRoot = fileparts(mfilename('fullpath'));
 
-fprintf('........................\n');
-fprintf('Cubatura con OptimalPolyCuba3D \n');
-fprintf('........................\n');
-
-ade = 1; 
-fprintf('ade: %-3.0f\n', ade);
-
-vertices = load('vertex.dat');
-facets   = load('tri.dat');
-f = @(x,y,z) ones(size(x));
+% Aggiunta della cartella contenente le funzioni ausiliarie
+addpath(fullfile(projectRoot, 'src'));
 
 %**************************************************************************
 %
@@ -76,9 +97,5 @@ XYZW_tens = scale_rule(XYZW_tens_ref, bbox);
 W = (XYZW_tens(:,4)) .* V_ref * (moments_ch ./ coeffs);
 XYZW = [XYZW_tens(:,1:3) W];
 
-fXYZW = feval(f, XYZW(:,1), XYZW(:,2), XYZW(:,3));
+XYZ = XYZW(:,1:3);
 W = XYZW(:,4);
-I = W' * fXYZW;
-
-fprintf('Integrale: %1.15e\n', I);
-fprintf('........................\n');

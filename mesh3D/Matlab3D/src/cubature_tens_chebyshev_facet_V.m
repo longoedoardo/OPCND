@@ -65,7 +65,6 @@ if max_i >= 2
         (XN .* TX(:, i_vec + 1) ./ denom2);
 end
 
-% Indicizzazione 1-based diretta
 idx_i = chebyshev_indices(:, 1) + 1;
 idx_j = chebyshev_indices(:, 2) + 1;
 idx_k = chebyshev_indices(:, 3) + 1;

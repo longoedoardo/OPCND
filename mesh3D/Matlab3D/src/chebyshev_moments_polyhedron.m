@@ -62,7 +62,7 @@ v3 = vertices(facets(:, 3), :);
 % quindi servono almeno nGP punti per dimensione tali che 2*nGP-1 >=
 % ade+1.
 
-nGP = ceil((ade + 2) / 2) + 1; % margine di sicurezza
+nGP = ceil((ade + 2) / 2);
 [nodi_rif, pesi_rif] = TriangleQuadraturePoints(nGP);
 
 for k = 1:n_facce
