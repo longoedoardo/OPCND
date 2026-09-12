@@ -1,8 +1,5 @@
 # OptimalPolyCuba3D
 
-Regole di cubatura numerica per l'integrazione di funzioni su domini
-poliedrali tridimensionali.
-
 Questa directory contiene l'implementazione tridimensionale del metodo
 **OptimalPolyCuba3D**, basato sulla costruzione di regole di cubatura
 mediante una base tensoriale di polinomi di Chebyshev e il calcolo dei
@@ -110,9 +107,7 @@ La funzione restituisce l'approssimazione numerica dell'integrale. La funzione i
 # Rappresentazione del dominio
 
 Il dominio tridimensionale è rappresentato mediante una **mesh
-superficiale triangolare chiusa**.
-
-La geometria è descritta dalle due matrici:
+superficiale triangolare chiusa**. La geometria è descritta dalle due matrici:
 
 ```matlab
 vertices
