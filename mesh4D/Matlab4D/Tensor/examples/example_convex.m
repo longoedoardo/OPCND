@@ -9,13 +9,17 @@ addpath(fullfile(projectRoot, 'src'));
 %**************************************************************************
 %
 %   Esempio:
-%       Cubatura 4D su dominio poliedrale concavo in movimento
+%       Cubatura 4D su dominio poliedrale convesso in movimento
 %
 %   Descrizione:
-%       Questo esempio dimostra l'utilizzo del metodo OptimalPolyCuba4D_MoL
-%       per l'integrazione di una funzione su un dominio poliedrale in
-%       movimento per tau in [0,1] concavo, rappresentato mediante una mesh
-%       superficiale triangolare.
+%       Questo esempio dimostra l'utilizzo del metodo
+%       OptimalPolyCuba4D_Tensor per l'integrazione di una funzione su un
+%       dominio poliedrale convesso in movimento per tau in [0,1],
+%       rappresentato mediante una mesh superficiale triangolare.
+%
+%       Il test considera la funzione costante f = 1. L'integrale 4D esatto
+%       viene calcolato integrando analiticamente il volume istantaneo del
+%       dominio lungo l'intervallo temporale [0,1].
 %
 %**************************************************************************
 
@@ -24,22 +28,20 @@ addpath(fullfile(projectRoot, 'src'));
 %**************************************************************************
 
 ade = 1;
-n_tau = 1000;
 
 fprintf('\n');
 fprintf('**************************************************************\n');
 fprintf('                 OPTIMALPOLYCUBA4D\n');
-fprintf('                - Metodo delle Linee -\n');
-fprintf('    Cubatura su Dominio Poliedrale Concavo in Movimento\n');
+fprintf('              - Metodo Tensoriale -\n');
+fprintf('    Cubatura su Dominio Poliedrale Convesso in Movimento\n');
 fprintf('**************************************************************\n');
 fprintf('\n');
 
 fprintf('Ade:                   %d\n', ade);
-fprintf('Numero di nodi tau:    %d\n', n_tau);
 
-vertici_iniziali = load('concave_vertex.dat'); % Configurazione a tau = 0
-facets           = load('concave_tri.dat'); % Connettivita' delle facce (costante)
-vertici_finali   = load('concave_vertex_new.dat'); % Configurazione a tau = 1
+vertici_iniziali = load('convex_vertex.dat');
+facets           = load('convex_tri.dat');
+vertici_finali   = load('convex_vertex_new.dat');
 
 fprintf('Numero di vertici:     %d\n', size(vertici_iniziali,1));
 fprintf('Numero di facce:       %d\n', size(facets,1));
@@ -56,6 +58,7 @@ fprintf('Funzione integranda:   %s\n', f_string);
 %**************************************************************************
 % Plot dominio poliedrale iniziale e finale
 %**************************************************************************
+
 figure('Color','w');
 
 h = patch('Vertices', vertici_iniziali, ...
@@ -81,7 +84,10 @@ xlim([min(vertici_complessivi(:,1)), max(vertici_complessivi(:,1))]);
 ylim([min(vertici_complessivi(:,2)), max(vertici_complessivi(:,2))]);
 zlim([min(vertici_complessivi(:,3)), max(vertici_complessivi(:,3))]);
 
+%**************************************************************************
 % Animazione del dominio
+%**************************************************************************
+
 n_frame = 100;
 
 for k = 1:n_frame
@@ -96,8 +102,9 @@ for k = 1:n_frame
     set(h, 'Vertices', vertici_tau);
 
     % Aggiornamento del titolo
-    title(sprintf('Dominio Poliedrale Concavo in Movimento, $\\tau = %.2f$', tau), ...
-          'Interpreter','latex');
+    title(sprintf( ...
+        'Dominio Poliedrale Convesso in Movimento, $\\tau = %.2f$', tau), ...
+        'Interpreter','latex');
 
     drawnow;
 
@@ -105,6 +112,7 @@ for k = 1:n_frame
     pause(0.01);
 
 end
+
 
 %**************************************************************************
 % Inizio regola di cubatura
@@ -114,11 +122,11 @@ fprintf('\n');
 fprintf('Inizio Cubatura...\n');
 
 tic;
-[XYZtau, W] = OptimalPolyCuba4D_MoL(ade, n_tau, vertici_iniziali, vertici_finali, facets);
+[XYZT, W] = OptimalPolyCuba4D_Tensor(ade, vertici_iniziali,vertici_finali,facets);
 elapsedTime = toc;
 
-% Calcolo dell'integrale mediante la regola di cubatura 4D
-I = W' * f(XYZtau(:,1), XYZtau(:,2), XYZtau(:,3), XYZtau(:,4));
+I = W' * f(XYZT(:,1), XYZT(:,2), XYZT(:,3), XYZT(:,4));
+
 
 %**************************************************************************
 % Visualizzazione risultati e punti di cubatura
@@ -127,6 +135,6 @@ I = W' * f(XYZtau(:,1), XYZtau(:,2), XYZtau(:,3), XYZtau(:,4));
 fprintf('Fine Cubatura...\n');
 fprintf('\n');
 
-fprintf('Numero di nodi 4D:    %d\n', size(XYZtau,1));
+fprintf('Numero di nodi 4D:    %d\n', size(XYZT,1));
 fprintf('Integrale numerico:   %.15e\n', I);
 fprintf('Tempo di calcolo:     %.6e s\n', elapsedTime);

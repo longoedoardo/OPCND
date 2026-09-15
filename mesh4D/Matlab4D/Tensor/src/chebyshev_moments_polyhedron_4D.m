@@ -1,4 +1,5 @@
 function moments = chebyshev_moments_polyhedron_4D(vertici_4D, Hyperfacets, ade, chebyshev_indices, bbox)
+
 %**************************************************************************
 %
 % moments = chebyshev_moments_polyhedron_4D(vertici_4D, Hyperfacets, ade, chebyshev_indices, bbox)
@@ -52,7 +53,7 @@ baricentro_4D = mean(vertici_4D, 1);
 % triangolo 2D x intervallo temporale [0,1].
 [XI_ref, ETA_ref, T_ref, W_ref] = reference_prism_quadrature(ade);
 
-% Le prime due iperfacce sono base a tau = 0e tetto a tau = 1
+% Le prime due iperfacce sono base a tau = 0 e tetto a tau = 1
 % Con il campo F = (Phi_x,0,0,0), entrambe hanno n_x = 0
 
 for k = 3:num_facets

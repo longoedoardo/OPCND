@@ -8,7 +8,7 @@ function V = dCHEBVAND(deg, X, chebyshev_indices)
 %
 %**************************************************************************
 
-[m, d] = size(X);               % m = numero di punti, d = dimensione (es. 4)
+[m, d] = size(X); % m = numero di punti, d = dimensione (es. 4)
 N = size(chebyshev_indices, 1); % Numero di monomi (colonne di V)
 
 % Definizione automatica del box di riferimento [-1, 1] per le 'd' dimensioni
