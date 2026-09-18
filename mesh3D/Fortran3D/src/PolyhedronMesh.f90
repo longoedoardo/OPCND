@@ -9,14 +9,23 @@ MODULE PolyhedronMesh
         REAL(dp)                            :: bbox(6)
     END TYPE t_polyhedron
 
-CONTAINS
+    CONTAINS
 
     SUBROUTINE MeshReader(vertici_file, tri_file, poly)
+
+        IMPLICIT NONE 
+
+        !*******************************************************************************
+        ! Argomenti
+        !*******************************************************************************
         CHARACTER(LEN=*), INTENT(IN)            :: vertici_file
         CHARACTER(LEN=*), INTENT(IN)            :: tri_file
         TYPE(t_polyhedron), INTENT(OUT)         :: poly
-
+        !*******************************************************************************
+        ! Variabili locali
+        !*******************************************************************************
         INTEGER                                 :: u_vert, u_tri, ierr, n_vertici, n_facce, i, j
+        !*******************************************************************************
 
         ! Lettura vertici, richiedo che il file esista gia con OLD e che lo apriro' solo in lettura READ, 
         ! impedendo cosi' una possibile scrittura su file accidentale. Ponendo IOSTAT=ierr se l'apertura

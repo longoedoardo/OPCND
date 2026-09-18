@@ -1,7 +1,8 @@
 PROGRAM example_polynomial
 
 USE TypesDef, ONLY: dp
-USE OptimalPolyCuba3D_Module, ONLY: OptimalPolyCuba3D
+USE PolyhedronMesh, ONLY: t_polyhedron, MeshReader
+USE OPC3D_Module, ONLY: OPC3D
 
 IMPLICIT NONE
 
@@ -65,33 +66,33 @@ WRITE(*,'(A)')
 
 ALLOCATE(vertices(8,3))
 
-vertices = RESHAPE([ &
-    -1.0_dp, -1.0_dp, -1.0_dp, &
-     1.0_dp, -1.0_dp, -1.0_dp, &
-     1.0_dp,  1.0_dp, -1.0_dp, &
-    -1.0_dp,  1.0_dp, -1.0_dp, &
-    -1.0_dp, -1.0_dp,  1.0_dp, &
-     1.0_dp, -1.0_dp,  1.0_dp, &
-     1.0_dp,  1.0_dp,  1.0_dp, &
-    -1.0_dp,  1.0_dp,  1.0_dp  &
-    ], [8,3])
+vertices = TRANSPOSE(RESHAPE([ &
+-1.0_dp, -1.0_dp, -1.0_dp, &
+ 1.0_dp, -1.0_dp, -1.0_dp, &
+ 1.0_dp,  1.0_dp, -1.0_dp, &
+-1.0_dp,  1.0_dp, -1.0_dp, &
+-1.0_dp, -1.0_dp,  1.0_dp, &
+ 1.0_dp, -1.0_dp,  1.0_dp, &
+ 1.0_dp,  1.0_dp,  1.0_dp, &
+-1.0_dp,  1.0_dp,  1.0_dp  &
+], [3,8]))
 
 ALLOCATE(facets(12,3))
 
-facets = RESHAPE([ &
-    1, 3, 2, &
-    1, 4, 3, &
-    5, 6, 7, &
-    5, 7, 8, &
-    1, 2, 6, &
-    1, 6, 5, &
-    4, 8, 7, &
-    4, 7, 3, &
-    1, 5, 8, &
-    1, 8, 4, &
-    2, 3, 7, &
-    2, 7, 6  &
-    ], [12,3])
+facets = TRANSPOSE(RESHAPE([ &
+1, 3, 2, &
+1, 4, 3, &
+5, 6, 7, &
+5, 7, 8, &
+1, 2, 6, &
+1, 6, 5, &
+4, 8, 7, &
+4, 7, 3, &
+1, 5, 8, &
+1, 8, 4, &
+2, 3, 7, &
+2, 7, 6  &
+], [3,12]))
 
 
 n_vertici = SIZE(vertices,1)
@@ -123,7 +124,8 @@ WRITE(*,'(A)')
 WRITE(*,'(A)') 'Inizio Cubatura...'
 
 CALL CPU_TIME(t_start)
-CALL OptimalPolyCuba3D(ade, vertices, facets, XYZ, W)
+CALL OPC3D(ade, vertices, facets, 'GJ', XYZ, W)
+    ! CALL OPC3D(ade, vertices, facets, 'D', XYZ, W)
 CALL CPU_TIME(t_end)
 
 elapsedTime = t_end - t_start
@@ -178,7 +180,8 @@ WRITE(*,'(A)')
 WRITE(*,'(A)') 'Inizio Cubatura...'
 
 CALL CPU_TIME(t_start)
-CALL OptimalPolyCuba3D(ade, vertices, facets, XYZ, W)
+CALL OPC3D(ade, vertices, facets, 'GJ', XYZ, W)
+    ! CALL OPC3D(ade, vertices, facets, 'D', XYZ, W)
 CALL CPU_TIME(t_end)
 
 elapsedTime = t_end - t_start
@@ -236,7 +239,8 @@ WRITE(*,'(A)')
 WRITE(*,'(A)') 'Inizio Cubatura...'
 
 CALL CPU_TIME(t_start)
-CALL OptimalPolyCuba3D(ade, vertices, facets, XYZ, W)
+CALL OPC3D(ade, vertices, facets, 'D', XYZ, W)
+    ! CALL OPC3D(ade, vertices, facets, 'D', XYZ, W)
 CALL CPU_TIME(t_end)
 
 elapsedTime = t_end - t_start

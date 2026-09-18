@@ -1,4 +1,4 @@
-MODULE triangleQuadratureGJ
+MODULE TriangleQuadratureGJ
 
   USE TypesDef
 
@@ -9,122 +9,111 @@ MODULE triangleQuadratureGJ
   ! 1D di Gauss-Jacobi.
   !**********************************************************************
 
-  IMPLICIT NONE
-
-CONTAINS
-
-  SUBROUTINE shiftingTriangleQuadrature(V, nGP, P, W)
-
-    IMPLICIT NONE
-    !**********************************************************************    
-    ! Argomenti
-    !**********************************************************************                                                    
-    REAL(dp),    INTENT(IN)                  :: V(3,3)  ! Vertici del triangolo, per riga
-    INTEGER, INTENT(IN)                      :: nGP     ! N. punti di Gauss-Jacobi 1D
-    REAL(dp),    ALLOCATABLE, INTENT(OUT)    :: P(:,:)  ! Punti quadratura reali (n_points,3)
-    REAL(dp),    ALLOCATABLE, INTENT(OUT)    :: W(:)    ! Pesi quadratura reali (n_points)
-    !**********************************************************************
-    ! Variabili locali                             
-    !**********************************************************************                        
-    INTEGER                                  :: i, n_points
-    REAL(dp)                                 :: Area
-    REAL(dp)                                 :: A(3), B(3)
-    REAL(dp), ALLOCATABLE                    :: P_std(:,:), W_std(:)   ! Punti e pesi sul triangolo di riferimento
-    !**********************************************************************
-
-    n_points = nGP * nGP
-
-    ALLOCATE(P_std(2, n_points))
-    ALLOCATE(W_std(n_points))
-
-    ! Punti e pesi sul triangolo di riferimento (0,0), (1,0), (0,1)
-    CALL TriangleQuadraturePoints(P_std, W_std, n_points, nGP)
-
-    IF (ALLOCATED(P)) DEALLOCATE(P)
-    ALLOCATE(P(n_points, 3))
-
-    IF (ALLOCATED(W)) DEALLOCATE(W)
-    ALLOCATE(W(n_points))
-
-    ! Lati del triangolo reale a partire dal primo vertice
-    A = V(2,:) - V(1,:)
-    B = V(3,:) - V(1,:)
-
-    ! Shifting affine dei punti dal triangolo di riferimento a quello reale.
-    ! NB: P_std ha shape (2, n_points) -> coordinata (riga), punto (colonna)
-    DO i = 1, n_points
-       P(i,:) = V(1,:) + P_std(1,i)*A + P_std(2,i)*B
-    END DO
-
-    ! Area del triangolo reale: metà del modulo del prodotto vettoriale A x B
-    Area = 0.5 * SQRT( (A(2)*B(3) - A(3)*B(2))**2 &
-                      + (A(3)*B(1) - A(1)*B(3))**2 &
-                      + (A(1)*B(2) - A(2)*B(1))**2 )
-
-    ! I pesi standard sommano a 0.5 (area del triangolo di riferimento):
-    ! si riscalano quindi con il rapporto Area / 0.5 = 2 * Area
-    W = 2.0 * Area * W_std
-
-    DEALLOCATE(P_std, W_std)
-
-  END SUBROUTINE shiftingTriangleQuadrature
-
-
-  SUBROUTINE TriangleQuadraturePoints(IntGaussP,IntGaussW,nIntGP,nGP) 
-
    IMPLICIT NONE
 
-   !**********************************************************************
-   ! Argomenti
-   !**********************************************************************
-   INTEGER, INTENT(IN) :: nGP
-   INTEGER, INTENT(OUT) :: nIntGP
-   REAL(dp), INTENT(OUT) :: IntGaussP(2, nGP*nGP)
-   REAL(dp), INTENT(OUT) :: IntGaussW(nGP*nGP)
+   CONTAINS
 
-   !**********************************************************************
-   ! Variabili locali
-   !**********************************************************************
-   INTEGER :: i, j
-   INTEGER :: iIntGP
+   SUBROUTINE shiftingTriangleQuadratureGJ(V, nodi_rif, pesi_rif, P, W)
 
-   REAL(dp) :: tol
-   REAL(dp) :: mu1(nGP)
-   REAL(dp) :: mu2(nGP)
-   REAL(dp) :: A1(nGP)
-   REAL(dp) :: A2(nGP)
-    tol = 1.0 / (10.0**(PRECISION(1.0)-2) )                                   
-    !**********************************************************************                                                                         
-    ! Quadrature points are defined by the conical product of 1D Gauss-Jacobi 
-    ! formulas with nGP quadrature points. See Stround, p. 28ff for details.
-    ! **********************************************************************
-    nIntGP = nGP*nGP 
-    ! 
-    CALL gaujac(mu1,A1,nGP,1.0_dp,0.0_dp)     ! Get the Gauss-Jacobi positions and weights
-    CALL gaujac(mu2,A2,nGP,0.0_dp,0.0_dp)     ! Get the Gauss-Jacobi positions and weights
-    !
-    mu1(:) = 0.5*mu1(:) + 0.5       ! Shift and rescale positions, because Stroud
-    A1(:)  = 0.5**2*A1(:)           ! integrates over the interval [0,1] and
-    mu2(:) = 0.5*mu2(:) + 0.5       ! the function gaujac of the num. recipes
-    A2(:)  = 0.5**1*A2(:)           ! integrates over the interval [-1,1].
-    !
-    iIntGP = 1
-    DO i = 1, nGP 
-       DO j = 1, nGP
-          intGaussP(1,iIntGP) = mu1(i)
-          intGaussP(2,iIntGP) = mu2(j)*(1.-mu1(i))
-          intGaussW(iIntGP)   = A1(i)*A2(j)      
-          iIntGP              = iIntGP + 1
-       ENDDO
-    ENDDO
-    !
-    IF (     ((ABS(SUM(intGaussW(:)))-0.5).GT.tol)  ) THEN
-       WRITE(*,*) '| Integration points calculated with conical product.'
-       WRITE(*,*) '| Number of integration points is  ', nIntGP
-       WRITE(*,*) '| SUM of Weights is ', SUM(intGaussW(:)), ' and must be 0.5! '
-    END IF
-    ! 
-  END SUBROUTINE TriangleQuadraturePoints
+      IMPLICIT NONE
+
+      !********************************************************************************
+      ! Argomenti
+      !********************************************************************************
+      REAL(dp), INTENT(IN) :: V(3,3)
+      REAL(dp), INTENT(IN) :: nodi_rif(:,:)
+      REAL(dp), INTENT(IN) :: pesi_rif(:)
+      REAL(dp), ALLOCATABLE, INTENT(OUT) :: P(:,:)
+      REAL(dp), ALLOCATABLE, INTENT(OUT) :: W(:)
+
+      !********************************************************************************
+      ! Variabili locali
+      !********************************************************************************
+      INTEGER :: i, n_points
+      REAL(dp) :: Area
+      REAL(dp) :: A(3), B(3)
+
+      n_points = SIZE(pesi_rif)
+
+      IF (ALLOCATED(P)) DEALLOCATE(P)
+      ALLOCATE(P(n_points,3))
+
+      IF (ALLOCATED(W)) DEALLOCATE(W)
+      ALLOCATE(W(n_points))
+
+      ! Lati del triangolo reale a partire dal primo vertice
+      A = V(2,:) - V(1,:)
+      B = V(3,:) - V(1,:)
+
+      ! Shifting affine dei punti dal triangolo di riferimento
+      ! al triangolo reale.
+      DO i = 1, n_points
+         P(i,:) = V(1,:) + nodi_rif(1,i)*A + nodi_rif(2,i)*B
+      END DO
+
+      ! Area del triangolo reale corrisponde alla metà del modulo del prodotto vettoriale A x B
+      Area = 0.5 * SQRT( (A(2)*B(3) - A(3)*B(2))**2 &
+                        + (A(3)*B(1) - A(1)*B(3))**2 &
+                        + (A(1)*B(2) - A(2)*B(1))**2 )
+
+      ! I pesi standard sommano a 0.5. Si riscalano quindi con il rapporto Area / 0.5 = 2 * Area
+      W = 2.0_dp * Area * pesi_rif
+
+   END SUBROUTINE shiftingTriangleQuadratureGJ
+
+
+   SUBROUTINE TriangleQuadratureGJPoints(IntGaussP,IntGaussW,nIntGP,nGP) 
+
+      IMPLICIT NONE
+
+      !**********************************************************************
+      ! Argomenti
+      !**********************************************************************
+      INTEGER, INTENT(IN) :: nGP
+      INTEGER, INTENT(OUT) :: nIntGP
+      REAL(dp), INTENT(OUT) :: IntGaussP(2, nGP*nGP)
+      REAL(dp), INTENT(OUT) :: IntGaussW(nGP*nGP)
+      !**********************************************************************
+      ! Variabili locali
+      !**********************************************************************
+      INTEGER :: i, j
+      INTEGER :: iIntGP
+
+      REAL(dp) :: tol
+      REAL(dp) :: mu1(nGP)
+      REAL(dp) :: mu2(nGP)
+      REAL(dp) :: A1(nGP)
+      REAL(dp) :: A2(nGP)
+      tol = 1.0 / (10.0**(PRECISION(1.0)-2) )                                   
+      !**********************************************************************
+
+      nIntGP = nGP*nGP 
+      ! 
+      CALL gaujac(mu1,A1,nGP,1.0_dp,0.0_dp)
+      CALL gaujac(mu2,A2,nGP,0.0_dp,0.0_dp)
+      !
+      mu1(:) = 0.5*mu1(:) + 0.5       
+      A1(:)  = 0.5**2*A1(:)           
+      mu2(:) = 0.5*mu2(:) + 0.5       
+      A2(:)  = 0.5**1*A2(:)           
+      !
+      iIntGP = 1
+      DO i = 1, nGP 
+         DO j = 1, nGP
+            intGaussP(1,iIntGP) = mu1(i)
+            intGaussP(2,iIntGP) = mu2(j)*(1.-mu1(i))
+            intGaussW(iIntGP)   = A1(i)*A2(j)      
+            iIntGP              = iIntGP + 1
+         ENDDO
+      ENDDO
+      !
+      IF (     ((ABS(SUM(intGaussW(:)))-0.5).GT.tol)  ) THEN
+         WRITE(*,*) '| Integration points calculated with conical product.'
+         WRITE(*,*) '| Number of integration points is  ', nIntGP
+         WRITE(*,*) '| SUM of Weights is ', SUM(intGaussW(:)), ' and must be 0.5! '
+      END IF
+      ! 
+   END SUBROUTINE TriangleQuadratureGJPoints
 
 
   PURE ELEMENTAL FUNCTION gammln(xx)
@@ -278,4 +267,4 @@ SUBROUTINE gaujac(x,w,n,alf,bet)
   RETURN
 END SUBROUTINE gaujac
 
-END MODULE triangleQuadratureGJ
+END MODULE TriangleQuadratureGJ

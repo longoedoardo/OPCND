@@ -2,7 +2,7 @@ PROGRAM example_convex
 
     USE TypesDef, ONLY: dp
     USE PolyhedronMesh, ONLY: t_polyhedron, MeshReader
-    USE OptimalPolyCuba3D_Module, ONLY: OptimalPolyCuba3D
+    USE OPC3D_Module, ONLY: OPC3D
 
     IMPLICIT NONE
 
@@ -80,7 +80,8 @@ PROGRAM example_convex
 
     CALL CPU_TIME(t_start)
 
-    CALL OptimalPolyCuba3D(ade, poly%vertici, poly%facce, XYZ, W)
+    CALL OPC3D(ade, poly%vertici, poly%facce, 'GJ', XYZ, W)
+    ! CALL OPC3D(ade, poly%vertici, poly%facce, 'D', XYZ, W)
 
     CALL CPU_TIME(t_end)
 
