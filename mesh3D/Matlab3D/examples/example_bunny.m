@@ -22,7 +22,7 @@ addpath(fullfile(projectRoot, 'src'));
 %  Parametri e caricamento mesh
 %**************************************************************************
 
-ade = 1;
+ade = 133;
 
 fprintf('\n');
 fprintf('**************************************************************\n');
@@ -89,7 +89,8 @@ fprintf('\n');
 fprintf('Inizio Cubatura...\n');
 
 tic;
-[XYZ, W] = OptimalPolyCuba3D(ade, vertices, facets);
+[XYZ, W] = OPC3D(ade, vertices, facets, "D");
+%[XYZ, W] = OPC3D(ade, vertices, facets, "GJ");
 elapsedTime = toc;
 
 I = W' * f(XYZ(:,1), XYZ(:,2), XYZ(:,3));

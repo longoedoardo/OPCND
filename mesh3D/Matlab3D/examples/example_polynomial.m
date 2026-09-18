@@ -124,8 +124,10 @@ fprintf('\n');
 fprintf('Inizio Cubatura...\n');
 
 tic;
-[XYZ, W] = OptimalPolyCuba3D(ade, vertices, facets);
+[XYZ, W] = OPC3D(ade, vertices, facets, "D");
+%[XYZ, W] = OPC3D(ade, vertices, facets, "GJ");
 elapsedTime = toc;
+
 I = W' * f1(XYZ(:,1), XYZ(:,2), XYZ(:,3));
 
 fprintf('Fine Cubatura...\n');
@@ -164,8 +166,10 @@ fprintf('\n');
 fprintf('Inizio Cubatura...\n');
 
 tic;
-[XYZ, W] = OptimalPolyCuba3D(ade, vertices, facets);
+[XYZ, W] = OPC3D(ade, vertices, facets, "D");
+%[XYZ, W] = OPC3D(ade, vertices, facets, "GJ");
 elapsedTime = toc;
+
 
 I = W' * f2(XYZ(:,1), XYZ(:,2), XYZ(:,3));
 
@@ -205,8 +209,10 @@ fprintf('\n');
 fprintf('Inizio Cubatura...\n');
 
 tic;
-[XYZ, W] = OptimalPolyCuba3D(ade, vertices, facets);
+[XYZ, W] = OPC3D(ade, vertices, facets, "D");
+%[XYZ, W] = OPC3D(ade, vertices, facets, "GJ");
 elapsedTime = toc;
+
 I = W' * f3(XYZ(:,1), XYZ(:,2), XYZ(:,3));
 
 fprintf('Fine Cubatura...\n');

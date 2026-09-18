@@ -1,7 +1,7 @@
-function [IntGaussP, IntGaussW] = TriangleQuadraturePoints(nGP)
+function [IntGaussP, IntGaussW] = TriangleGJQuadraturePoints(nGP)
 %**************************************************************************
 %
-% function [IntGaussP, IntGaussW] = TriangleQuadraturePoints(nGP)
+% function [IntGaussP, IntGaussW] = TriangleGJQuadraturePoints(nGP)
 %
 % INPUT:
 % - nGP       : Scalare, numero di punti di Gauss per ogni dimensione lineare

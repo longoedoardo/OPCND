@@ -1,7 +1,7 @@
-function [nodifisici, pesifisici, norm_ext] = mapTrianglePoints(nodi_rif, pesi_rif, V)
+function [nodifisici, pesifisici, norm_ext] = mapTriangleGJPoints(nodi_rif, pesi_rif, V)
 %**************************************************************************
 %
-% function [nodi_fisici, pesi_fisici, norm_ext] = mapTrianglePoints(nodi_rif, pesi_rif, V)
+% function [nodi_fisici, pesi_fisici, norm_ext] = mapTriangleGJPoints(nodi_rif, pesi_rif, V)
 %
 % Esegue una trasformazione affine per trasportare i punti di integrazione
 % definiti sul triangolo di riferimento (vertici (0,0), (1,0), (0,1)) su un

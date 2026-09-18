@@ -1,8 +1,10 @@
-function [XYZ, W] = OptimalPolyCuba3D(ade, vertices, facets)
+function [XYZ, W] = OPC3D(ade, vertices, facets, method)
 
 %**************************************************************************
 %
-% function [XYZ, W] = OptimalPolyCuba3D(ade, vertices, facets)
+% function [XYZ, W] = OPC3D(ade, vertices, facets)
+%
+% O.P.C.3D = "Optimal 3D Polyhedron Cubature"
 %
 % Calcola un'approssimazione numerica di un integrale di volume
 % tridimensionale su un dominio poliedrico rappresentato mediante
@@ -10,7 +12,7 @@ function [XYZ, W] = OptimalPolyCuba3D(ade, vertices, facets)
 %
 % La regola di cubatura è costruita combinando una base di Chebyshev
 % tensoriale shape-independent con i momenti shape-dependent calcolati
-% a partire dalla rappresentazione superficiale del dominio poliedrico.
+% a partire dalla rappresentazione superficiale del dominio poliedrico.s
 %
 %**************************************************************************
 %
@@ -26,10 +28,16 @@ function [XYZ, W] = OptimalPolyCuba3D(ade, vertices, facets)
 %       Matrice M x 3 contenente la connettività della mesh superficiale
 %       triangolare. Ogni riga contiene gli indici dei tre vertici che
 %       definiscono una faccia triangolare.
+%   
+%   - method:
+%       Metodo di integrazione sulle facce triangolari:
+%       * "D": Metodo simmetrico di Dunavant
+%       * "GJ": Metodo di Gauss-Jacobi
 %
 %   OUTPUT:
 %   - XYZ:
 %       Nodi di quadratura
+%
 %   - W:
 %       Pesi relativi ai nodi di quadratura
 %
@@ -48,6 +56,13 @@ projectRoot = fileparts(mfilename('fullpath'));
 
 % Aggiunta della cartella contenente le funzioni ausiliarie
 addpath(fullfile(projectRoot, 'src'));
+
+% Controllo della disponibilità delle regole di Dunavant
+if strcmp(method, "D") && ade > 20
+    warning(['Le regole di Dunavant sono disponibili solo fino al ', ...
+        'grado 20. Cambiare metodo o modificare ade']);
+    return;
+end
 
 %**************************************************************************
 %
@@ -87,7 +102,7 @@ bbox = [bbox_min; bbox_max];
 
 % Momenti della base sul poliedro (teorema della divergenza sulle facce)
 moments_ch = chebyshev_moments_polyhedron(vertices, facets, ade, ...
-    chebyshev_indices, bbox);
+    chebyshev_indices, bbox, method);
 
 % Riscalamento della griglia di riferimento sulla bounding box reale
 XYZW_tens = scale_rule(XYZW_tens_ref, bbox);
