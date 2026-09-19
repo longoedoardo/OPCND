@@ -43,51 +43,6 @@ Il progetto contiene già esempi di input nella cartella dei dati e nei file pri
 
 Se si desidera cambiare la geometria o l'integranda, è necessario modificare i file di input o il codice nel main corrispondente.
 
-## Utilizzo
-
-### Versione Fortran 3D
-
-```bash
-cd mesh3D/Fortran3D
-make
-./OptimalPolyCuba3D
-```
-
-### Versione MATLAB 3D
-
-Apri il file:
-
-```matlab
-mesh3D/Matlab3D/mainOptimalPolyCuba3D.m
-```
-
-e eseguilo da MATLAB. Il file aggiunge automaticamente le cartelle ShapeIndependent e ShapeDependent al path.
-
-### Versione Fortran 4D (Tensor)
-
-```bash
-cd mesh4D/Fortran4D/Tensor
-make
-./mainOptimalPolyCuba4D_Tensor
-```
-
-### Versione Fortran 4D (MoL)
-
-```bash
-cd mesh4D/Fortran4D/MoL
-make
-./mainOptimalPolyCuba4D_MoL
-```
-
-### Versione MATLAB 4D
-
-Apri uno dei file principali:
-
-```matlab
-mesh4D/Matlab4D/Tensor/mainOptimalPolyCuba4D_Tensor.m
-mesh4D/Matlab4D/MoL/mainOptimalPolyCuba4D_MoL.m
-```
-
 ## Struttura del progetto
 
 ```text
@@ -96,12 +51,8 @@ PolyCheapCubatureND/
 ├── README.md
 ├── mesh3D/
 │   ├── Fortran3D/
-│   │   ├── Makefile
-│   │   ├── data/
-│   │   └── src/
-│   └── Matlab3D/
-│       ├── ShapeDependent/
-│       └── ShapeIndependent/
+│   ├── Matlab3D/
+│   └── Parallel3D/
 ├── mesh4D/
 │   ├── Fortran4D/
 │   │   ├── MoL/
@@ -111,17 +62,6 @@ PolyCheapCubatureND/
 │       └── Tensor/
 ```
 
-## Esempi
-
-Il repository contiene già esempi di esecuzione nei file main:
-
-- [mesh3D/Matlab3D/mainOptimalPolyCuba3D.m](mesh3D/Matlab3D/mainOptimalPolyCuba3D.m)
-- [mesh3D/Fortran3D/src/mainOptimalPolyCuba3D.f90](mesh3D/Fortran3D/src/mainOptimalPolyCuba3D.f90)
-- [mesh4D/Matlab4D/Tensor/mainOptimalPolyCuba4D_Tensor.m](mesh4D/Matlab4D/Tensor/mainOptimalPolyCuba4D_Tensor.m)
-- [mesh4D/Fortran4D/Tensor/src/mainOptimalPolyCuba4D_Tensor.f90](mesh4D/Fortran4D/Tensor/src/mainOptimalPolyCuba4D_Tensor.f90)
-
-Questi file usano dati di esempio già presenti nelle rispettive cartelle data/ o nella directory corrente.
-
 ## Riferimenti scientifici
 
 Il riferimento principale alla base metodologica del progetto è l'articolo:
@@ -129,17 +69,6 @@ Il riferimento principale alla base metodologica del progetto è l'articolo:
 - Sommariva, A., Vianello, M. "Cheap and stable quadrature on polyhedral elements". DOI: https://dx.doi.org/10.1016/j.finel.2025.104409
 
 Per una trattazione teorica completa, inclusi i dettagli matematici, le dimostrazioni e l'analisi delle varie componenti del metodo, si rimanda alla tesi associata al progetto, che raccoglie i riferimenti e le motivazioni teoriche per la formulazione del problema di cubatura su poliedri e l'estensione del metodo ai domini spazio-temporali 4D.
-
-## Test
-
-Al momento non sono presenti test automatizzati o workflow CI nel repository. La verifica del codice avviene attraverso l'esecuzione manuale dei programmi principali e dei target Makefile forniti.
-
-## Note importanti
-
-- Il progetto è principalmente orientato a ricerca e sperimentazione numerica.
-- Le implementazioni Fortran richiedono gfortran e i file di input devono essere accessibili relativamente alla directory di esecuzione.
-- I main contengono parametri come ade e la funzione integranda, che possono essere modificati per adattare il calcolo al caso di interesse.
-- Il progetto è distribuito con licenza MIT.
 
 ## Licenza
 
