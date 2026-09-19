@@ -37,13 +37,11 @@ Mesh3D/
 │       ├── cub_gausscheb_tens3D.m
 │       ├── cubature_tens_chebyshev_facet_V.m
 │       ├── dCHEBVAND.m
-│       ├── mapTriangleDunavantPoints.m
-│       ├── mapTriangleGJPoints.m
+│       ├── ShiftingTriangleQuadrature.m
 │       ├── mono_next_grlex.m
 │       ├── scale_rule.m
 │       ├── tenscheb_norm2sq.m
-│       ├── TriangleDunavantQuadraturePoints.m
-│       ├── TriangleGJQuadraturePoints.m
+│       ├── TriangleQuadrature.m
 │       └── Dunavant/
 │           └── (routine di supporto per le regole di Dunavant)
 │
