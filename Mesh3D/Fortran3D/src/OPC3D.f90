@@ -118,7 +118,7 @@ REAL(dp), ALLOCATABLE                                   :: moments_ch(:)
 !***********************************************************************
 
 ! Controllo della disponibilità delle regole di Dunavant
-IF (TRIM(method) == 'D' .AND. ade > 20) THEN
+IF (TRIM(method) == 'D' .AND. ade > 19) THEN
     WRITE(*,'(A)') 'WARNING: Le regole di Dunavant sono disponibili solo fino al grado 20.'
     RETURN
 END IF

@@ -6,130 +6,211 @@ MODULE CubatureFunctions
 
    CONTAINS
 
+   SUBROUTINE triangle_quadrature(method, ade, nodes, weights)
+
+      USE TriangleQuadratureGJ
+      USE TriangleQuadratureDunavant
+
+      IMPLICIT NONE
+
+      !********************************************************************************
+      ! Argomenti
+      !********************************************************************************
+      CHARACTER(LEN=*), INTENT(IN) :: method
+      INTEGER, INTENT(IN) :: ade
+      REAL(dp), ALLOCATABLE, INTENT(OUT) :: nodes(:,:)
+      REAL(dp), ALLOCATABLE, INTENT(OUT) :: weights(:)
+      !********************************************************************************
+      ! Variabili locali
+      !********************************************************************************
+      INTEGER :: nGP
+      INTEGER :: n_points
+      INTEGER :: rule
+      !********************************************************************************
+
+      ! METODO GJ: Quadratura di Gauss-Jacobi
+      IF (TRIM(method) == 'GJ') THEN
+
+         ! Numero di punti di Gauss-Jacobi 1D necessari per integrare
+         ! esattamente sul triangolo un polinomio di grado (ade+1).
+         nGP = CEILING((ade + 2.0_dp) / 2.0_dp)
+
+         n_points = nGP * nGP
+
+         ALLOCATE(nodes(n_points,2))
+         ALLOCATE(weights(n_points))
+
+         CALL TriangleQuadratureGJPoints(nodes, weights, n_points, nGP)
+
+         ! I pesi della quadratura GJ standard sono riferiti a un
+         ! triangolo di area 1/2.
+         weights = 2.0_dp * weights
+
+
+      ! METODO D: Quadratura di Dunavant
+      ELSE IF (TRIM(method) == 'D') THEN
+
+         rule = ade + 1
+
+         ! Calcolo dei nodi e dei pesi sul triangolo di riferimento
+         CALL TriangleQuadratureDunavantPoints(rule, nodes, weights)
+
+      ! Caso in cui il metodo inserito non sia valido
+      ELSE
+
+         WRITE(*,'(A)') 'ERROR: Metodo di quadratura non valido. Usare ''GJ'' oppure ''D''.'
+         RETURN
+
+      END IF
+
+   END SUBROUTINE triangle_quadrature
+
+   SUBROUTINE shiftingTriangleQuadrature(V, nodes_ref, weights_ref, nodes, weights)
+
+      IMPLICIT NONE
+
+      !*******************************************************************************
+      ! Argomenti
+      !*******************************************************************************
+      REAL(dp), INTENT(IN) :: V(3,3)
+      REAL(dp), INTENT(IN) :: nodes_ref(:,:)
+      REAL(dp), INTENT(IN) :: weights_ref(:)
+      REAL(dp), ALLOCATABLE, INTENT(OUT) :: nodes(:,:)
+      REAL(dp), ALLOCATABLE, INTENT(OUT) :: weights(:)
+      !*******************************************************************************
+      ! Variabili locali
+      !*******************************************************************************
+      INTEGER :: i
+      INTEGER :: n_points
+
+      REAL(dp) :: A(3)
+      REAL(dp) :: B(3)
+      REAL(dp) :: cross_product(3)
+      REAL(dp) :: area
+      !*******************************************************************************
+
+      n_points = SIZE(weights_ref)
+
+      IF (ALLOCATED(nodes)) DEALLOCATE(nodes)
+      ALLOCATE(nodes(n_points,3))
+
+      IF (ALLOCATED(weights)) DEALLOCATE(weights)
+      ALLOCATE(weights(n_points))
+
+      ! Lati del triangolo reale a partire dal primo vertice
+      A = V(2,:) - V(1,:)
+      B = V(3,:) - V(1,:)
+
+      ! Trasformazione affine dei punti dal triangolo di riferimento
+      ! al triangolo fisico x = V1 + xi * (V2-V1) + eta * (V3-V1)
+      DO i = 1, n_points
+         nodes(i,:) = V(1,:) + nodes_ref(i,1) * A + nodes_ref(i,2) * B
+
+      END DO
+
+      ! Area del triangolo fisico
+      cross_product(1) = A(2)*B(3) - A(3)*B(2)
+      cross_product(2) = A(3)*B(1) - A(1)*B(3)
+      cross_product(3) = A(1)*B(2) - A(2)*B(1)
+
+      area = 0.5_dp * SQRT(SUM(cross_product**2))
+
+      weights = area * weights_ref
+
+   END SUBROUTINE shiftingTriangleQuadrature
+
    
    SUBROUTINE chebyshev_moments_polyhedron(vertices, facets, ade, chebyshev_indices, dbox, method, moments)
 
-   !*******************************************************************************
-   ! Calcola i momenti dei polinomi di Chebyshev sul poliedro tridimensionale
-   ! delimitato dalla mesh triangolare definita da vertices e facets.
-   ! I momenti volumetrici sono trasformati, mediante il teorema della divergenza,
-   ! in integrali di superficie sulle facce triangolari del poliedro. Gli integrali
-   ! sulle singole facce vengono quindi valutati numericamente mediante una formula
-   ! di quadratura sul triangolo.
-   ! La quadratura sulle facce può essere effettuata mediante uno dei seguenti
-   ! metodi:
-   !
-   !   'GJ' : quadratura di Gauss-Jacobi sul triangolo di riferimento;
-   !   'D'  : quadratura di Dunavant sul triangolo.
-   !
-   ! Per ciascuna faccia viene calcolata la normale esterna unitaria e il relativo
-   ! contributo ai momenti. I contributi ottenuti da tutte le facce vengono infine
-   ! sommati per ottenere i momenti del poliedro.
-   !
-   ! Si assume che:
-   !
-   !   - vertices contenga le coordinate dei vertici della mesh;
-   !   - facets contenga la connettivita' triangolare della superficie;
-   !   - le facce siano orientate coerentemente;
-   !   - l'orientamento delle facce sia compatibile con le normali esterne;
-   !   - la superficie triangolare sia chiusa.
-   !*******************************************************************************
-
-   USE TriangleQuadratureGJ
-   USE TriangleQuadratureDunavant
-
-   IMPLICIT NONE
-
-   !*******************************************************************************
-   ! Argomenti
-   !*******************************************************************************
-   REAL(dp), INTENT(IN)               :: vertices(:,:)
-   INTEGER, INTENT(IN)                :: facets(:,:)
-   INTEGER, INTENT(IN)                :: ade
-   INTEGER, INTENT(IN)                :: chebyshev_indices(:,:)
-   REAL(dp), INTENT(IN)               :: dbox(6)
-   CHARACTER(LEN=*), INTENT(IN)       :: method
-   REAL(dp), ALLOCATABLE, INTENT(OUT) :: moments(:)
-   !*******************************************************************************
-   ! Variabili locali
-   !*******************************************************************************
-   INTEGER :: num_indici
-   INTEGER :: n_facce
-   INTEGER :: k
-   INTEGER :: v1_idx
-   INTEGER :: v2_idx
-   INTEGER :: v3_idx
-   INTEGER :: nGP
-
-   REAL(dp) :: A(3)
-   REAL(dp) :: B(3)
-   REAL(dp) :: C(3)
-
-   REAL(dp) :: V_face(3,3)
-
-   REAL(dp) :: norm_ext(3)
-
-   REAL(dp), ALLOCATABLE :: XYZW(:,:)
-   REAL(dp), ALLOCATABLE :: WV_CUB(:)
-
-   REAL(dp), ALLOCATABLE :: P_std(:,:)
-   REAL(dp), ALLOCATABLE :: W_std(:)
-
-   REAL(dp), ALLOCATABLE :: nodi_rif(:,:)
-   REAL(dp), ALLOCATABLE :: pesi_rif(:)
-
-   REAL(dp), ALLOCATABLE :: chebyshev_moms(:,:)
-   REAL(dp), ALLOCATABLE :: moms_facet_raw(:)
-
-   INTEGER :: n_points
-   INTEGER :: rule
-
-   REAL(dp) :: cp(3)
-   REAL(dp) :: area2
-   !*******************************************************************************
-
-
-   ! Dimensioni
-   num_indici = SIZE(chebyshev_indices, 1)
-   n_facce = SIZE(facets, 1)
-
-   ! Allocazione dei momenti sulle singole facce
-   ALLOCATE(chebyshev_moms(num_indici, n_facce))
-   chebyshev_moms = 0.0_dp
-
-   ! METODO GJ: Quadratura di Gauss-Jacobi
-   IF (TRIM(method) == 'GJ') THEN
-
-      ! Numero di punti di Gauss-Jacobi 1D necessari per integrare esattamente
-      ! sul triangolo un polinomio di grado (ade+1).
+      !*******************************************************************************
+      ! Calcola i momenti dei polinomi di Chebyshev sul poliedro tridimensionale
+      ! delimitato dalla mesh triangolare definita da vertices e facets.
+      ! I momenti volumetrici sono trasformati, mediante il teorema della divergenza,
+      ! in integrali di superficie sulle facce triangolari del poliedro. Gli integrali
+      ! sulle singole facce vengono quindi valutati numericamente mediante una formula
+      ! di quadratura sul triangolo.
+      ! La quadratura sulle facce può essere effettuata mediante uno dei seguenti
+      ! metodi:
       !
-      ! Il grado sale di 1 per effetto della primitiva utilizzata nel teorema
-      ! della divergenza. Con nGP punti la formula e' esatta fino al grado
-      ! 2*nGP-1. Pertanto: 2*nGP - 1 >= ade + 1 da cui: nGP >= (ade + 2)/2
+      !   'GJ' : quadratura di Gauss-Jacobi sul triangolo di riferimento;
+      !   'D'  : quadratura di Dunavant sul triangolo.
+      !
+      ! Per ciascuna faccia viene calcolata la normale esterna unitaria e il relativo
+      ! contributo ai momenti. I contributi ottenuti da tutte le facce vengono infine
+      ! sommati per ottenere i momenti del poliedro.
+      !
+      ! Si assume che:
+      !
+      !   - vertices contenga le coordinate dei vertici della mesh;
+      !   - facets contenga la connettivita' triangolare della superficie;
+      !   - le facce siano orientate coerentemente;
+      !   - l'orientamento delle facce sia compatibile con le normali esterne;
+      !   - la superficie triangolare sia chiusa.
+      !*******************************************************************************
 
-      nGP = CEILING((ade + 2.0_dp) / 2.0_dp)
+      USE TriangleQuadratureGJ
+      USE TriangleQuadratureDunavant
 
-      n_points = nGP * nGP
+      IMPLICIT NONE
 
-      ALLOCATE(P_std(2,n_points))
-      ALLOCATE(W_std(n_points))
+      !*******************************************************************************
+      ! Argomenti
+      !*******************************************************************************
+      REAL(dp), INTENT(IN)               :: vertices(:,:)
+      INTEGER, INTENT(IN)                :: facets(:,:)
+      INTEGER, INTENT(IN)                :: ade
+      INTEGER, INTENT(IN)                :: chebyshev_indices(:,:)
+      REAL(dp), INTENT(IN)               :: dbox(6)
+      CHARACTER(LEN=*), INTENT(IN)       :: method
+      REAL(dp), ALLOCATABLE, INTENT(OUT) :: moments(:)
+      !*******************************************************************************
+      ! Variabili locali
+      !*******************************************************************************
+      INTEGER :: num_indici
+      INTEGER :: n_facce
+      INTEGER :: k
 
-      ! Punti e pesi sul triangolo di riferimento (0,0), (1,0), (0,1)
-      CALL TriangleQuadratureGJPoints(P_std, W_std, n_points, nGP)
+      REAL(dp) :: A(3)
+      REAL(dp) :: B(3)
+
+      REAL(dp) :: V_face(3,3)
+
+      REAL(dp) :: norm_ext(3)
+
+      REAL(dp), ALLOCATABLE :: XYZW(:,:)
+      REAL(dp), ALLOCATABLE :: WV_CUB(:)
+
+      REAL(dp), ALLOCATABLE :: chebyshev_moms(:,:)
+      REAL(dp), ALLOCATABLE :: moms_facet_raw(:)
+
+      REAL(dp), ALLOCATABLE :: nodes(:,:)
+      REAL(dp), ALLOCATABLE :: weights(:)
+
+      REAL(dp) :: cp(3)
+      REAL(dp) :: area2
+      !*******************************************************************************
+
+
+      ! Dimensioni
+      num_indici = SIZE(chebyshev_indices, 1)
+      n_facce = SIZE(facets, 1)
+
+      ! Allocazione dei momenti sulle singole facce
+      ALLOCATE(chebyshev_moms(num_indici, n_facce))
+      chebyshev_moms = 0.0_dp
+
+      CALL triangle_quadrature(method, ade, nodes, weights)
 
       DO k = 1, n_facce
 
-         v1_idx = facets(k,1)
-         v2_idx = facets(k,2)
-         v3_idx = facets(k,3)
+         V_face(1,:) = vertices(facets(k,1),:)
+         V_face(2,:) = vertices(facets(k,2),:)
+         V_face(3,:) = vertices(facets(k,3),:)
 
-         A = vertices(v1_idx,:)
-         B = vertices(v2_idx,:)
-         C = vertices(v3_idx,:)
+         ! Trasformazione dei punti di quadratura dal triangolo
+         ! di riferimento al triangolo fisico
+         CALL shiftingTriangleQuadrature(V_face, nodes, weights, XYZW, WV_CUB)
 
-         V_face(1,:) = A
-         V_face(2,:) = B
-         V_face(3,:) = C
          ! Calcolo della normale alla faccia
          A = V_face(2,:) - V_face(1,:)
          B = V_face(3,:) - V_face(1,:)
@@ -147,84 +228,23 @@ MODULE CubatureFunctions
 
          norm_ext = cp / area2
 
-         ! Trasformazione dei punti di quadratura dal triangolo
-         ! di riferimento al triangolo fisico
-         CALL shiftingTriangleQuadratureGJ(V_face, P_std, W_std, XYZW, WV_CUB)
-
          ! Calcolo dei momenti sulla faccia
          CALL cubature_tens_chebyshev_facet_V(XYZW, WV_CUB, chebyshev_indices, dbox, moms_facet_raw)
 
          ! Contributo della faccia
          chebyshev_moms(:,k) = norm_ext(1) * moms_facet_raw
 
-         IF (ALLOCATED(moms_facet_raw)) DEALLOCATE(moms_facet_raw)
-         IF (ALLOCATED(XYZW)) DEALLOCATE(XYZW)
-         IF (ALLOCATED(WV_CUB)) DEALLOCATE(WV_CUB)
-
       END DO
 
-   ! METODO D: Quadratura di Dunavant
-   ELSE IF (TRIM(method) == 'D') THEN
+      ALLOCATE(moments(num_indici))
 
-   rule = ade + 1
+      ! Somma dei contributi delle singole facce
+      moments = SUM(chebyshev_moms, DIM=2)
 
-   ! Calcolo dei nodi e dei pesi sul triangolo di riferimento
-   CALL TriangleQuadratureDunavantPoints(rule, nodi_rif, pesi_rif)
-
-   DO k = 1, n_facce
-
-      v1_idx = facets(k,1)
-      v2_idx = facets(k,2)
-      v3_idx = facets(k,3)
-
-      V_face(1,:) = vertices(v1_idx,:)
-      V_face(2,:) = vertices(v2_idx,:)
-      V_face(3,:) = vertices(v3_idx,:)
-
-      CALL shiftingTriangleQuadratureDunavant(V_face, nodi_rif, pesi_rif, XYZW, WV_CUB)
-
-      ! Calcolo della normale esterna
-      A = V_face(2,:) - V_face(1,:)
-      B = V_face(3,:) - V_face(1,:)
-
-      cp(1) = A(2)*B(3) - A(3)*B(2)
-      cp(2) = A(3)*B(1) - A(1)*B(3)
-      cp(3) = A(1)*B(2) - A(2)*B(1)
-
-      area2 = SQRT(SUM(cp**2))
-
-      IF (area2 <= 1.0d-14) THEN
-         chebyshev_moms(:,k) = 0.0_dp
-         CYCLE
-      END IF
-
-      norm_ext = cp / area2
-
-      CALL cubature_tens_chebyshev_facet_V( &
-           XYZW, WV_CUB, chebyshev_indices, dbox, moms_facet_raw)
-
-      chebyshev_moms(:,k) = norm_ext(1) * moms_facet_raw
-
-      IF (ALLOCATED(moms_facet_raw)) DEALLOCATE(moms_facet_raw)
-      IF (ALLOCATED(XYZW)) DEALLOCATE(XYZW)
-      IF (ALLOCATED(WV_CUB)) DEALLOCATE(WV_CUB)
-
-   END DO
-
-   ! Caso in cui il metodo inserito non sia valido
-   ELSE
-      WRITE(*,'(A)') 'ERROR: Metodo di quadratura non valido. Usare ''GJ'' oppure ''D''.'
-      RETURN
-   END IF
-
-   ALLOCATE(moments(num_indici))
-
-   ! Somma dei contributi delle singole facce
-   moments = SUM(chebyshev_moms, DIM=2)
-
-   DEALLOCATE(chebyshev_moms)
+      DEALLOCATE(chebyshev_moms)
 
    END SUBROUTINE chebyshev_moments_polyhedron
+
 
    SUBROUTINE cubature_tens_chebyshev_facet_V(nodes, weights, chebyshev_indices, dbox, chebyshev_moms)
 

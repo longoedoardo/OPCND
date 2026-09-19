@@ -226,9 +226,9 @@ MODULE ReferenceFunctions
 
         DO i = 1, n
             non_zero_counter = 0.0_dp
-            IF(chebyshev_indices(i, 1) /= 0)   non_zero_counter = non_zero_counter + 1.0_dp
-            IF(chebyshev_indices(i, 2) /= 0)   non_zero_counter = non_zero_counter + 1.0_dp
-            IF(chebyshev_indices(i, 3) /= 0)   non_zero_counter = non_zero_counter + 1.0_dp
+            IF(chebyshev_indices(i, 1) /= 0)   non_zero_counter = non_zero_counter + 1
+            IF(chebyshev_indices(i, 2) /= 0)   non_zero_counter = non_zero_counter + 1
+            IF(chebyshev_indices(i, 3) /= 0)   non_zero_counter = non_zero_counter + 1
             
             coeffs(i) = (PI**3.0_dp) / (2.0_dp**(non_zero_counter))
         END DO

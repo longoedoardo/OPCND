@@ -13,55 +13,6 @@ MODULE TriangleQuadratureGJ
 
    CONTAINS
 
-   SUBROUTINE shiftingTriangleQuadratureGJ(V, nodi_rif, pesi_rif, P, W)
-
-      IMPLICIT NONE
-
-      !********************************************************************************
-      ! Argomenti
-      !********************************************************************************
-      REAL(dp), INTENT(IN) :: V(3,3)
-      REAL(dp), INTENT(IN) :: nodi_rif(:,:)
-      REAL(dp), INTENT(IN) :: pesi_rif(:)
-      REAL(dp), ALLOCATABLE, INTENT(OUT) :: P(:,:)
-      REAL(dp), ALLOCATABLE, INTENT(OUT) :: W(:)
-
-      !********************************************************************************
-      ! Variabili locali
-      !********************************************************************************
-      INTEGER :: i, n_points
-      REAL(dp) :: Area
-      REAL(dp) :: A(3), B(3)
-
-      n_points = SIZE(pesi_rif)
-
-      IF (ALLOCATED(P)) DEALLOCATE(P)
-      ALLOCATE(P(n_points,3))
-
-      IF (ALLOCATED(W)) DEALLOCATE(W)
-      ALLOCATE(W(n_points))
-
-      ! Lati del triangolo reale a partire dal primo vertice
-      A = V(2,:) - V(1,:)
-      B = V(3,:) - V(1,:)
-
-      ! Shifting affine dei punti dal triangolo di riferimento
-      ! al triangolo reale.
-      DO i = 1, n_points
-         P(i,:) = V(1,:) + nodi_rif(1,i)*A + nodi_rif(2,i)*B
-      END DO
-
-      ! Area del triangolo reale corrisponde alla metà del modulo del prodotto vettoriale A x B
-      Area = 0.5 * SQRT( (A(2)*B(3) - A(3)*B(2))**2 &
-                        + (A(3)*B(1) - A(1)*B(3))**2 &
-                        + (A(1)*B(2) - A(2)*B(1))**2 )
-
-      ! I pesi standard sommano a 0.5. Si riscalano quindi con il rapporto Area / 0.5 = 2 * Area
-      W = 2.0_dp * Area * pesi_rif
-
-   END SUBROUTINE shiftingTriangleQuadratureGJ
-
-
    SUBROUTINE TriangleQuadratureGJPoints(IntGaussP,IntGaussW,nIntGP,nGP) 
 
       IMPLICIT NONE
@@ -71,7 +22,7 @@ MODULE TriangleQuadratureGJ
       !**********************************************************************
       INTEGER, INTENT(IN) :: nGP
       INTEGER, INTENT(OUT) :: nIntGP
-      REAL(dp), INTENT(OUT) :: IntGaussP(2, nGP*nGP)
+      REAL(dp), INTENT(OUT) :: IntGaussP(nGP*nGP, 2)
       REAL(dp), INTENT(OUT) :: IntGaussW(nGP*nGP)
       !**********************************************************************
       ! Variabili locali
@@ -87,70 +38,43 @@ MODULE TriangleQuadratureGJ
       tol = 1.0 / (10.0**(PRECISION(1.0)-2) )                                   
       !**********************************************************************
 
-      nIntGP = nGP*nGP 
-      ! 
-      CALL gaujac(mu1,A1,nGP,1.0_dp,0.0_dp)
-      CALL gaujac(mu2,A2,nGP,0.0_dp,0.0_dp)
-      !
-      mu1(:) = 0.5*mu1(:) + 0.5       
-      A1(:)  = 0.5**2*A1(:)           
-      mu2(:) = 0.5*mu2(:) + 0.5       
-      A2(:)  = 0.5**1*A2(:)           
-      !
+      nIntGP = nGP*nGP
+
+      ! Calcolo dei punti e dei pesi di Gauss-Jacobi
+      CALL gaujac(mu1, A1, nGP, 1.0_dp, 0.0_dp)
+      CALL gaujac(mu2, A2, nGP, 0.0_dp, 0.0_dp)
+
+      ! Trasformazione nell'intervallo [0,1]
+      mu1(:) = 0.5_dp * mu1(:) + 0.5_dp
+      A1(:)  = 0.5_dp**2 * A1(:)
+
+      mu2(:) = 0.5_dp * mu2(:) + 0.5_dp
+      A2(:)  = 0.5_dp * A2(:)
+
+      ! Costruzione della quadratura sul triangolo di riferimento
       iIntGP = 1
-      DO i = 1, nGP 
+      DO i = 1, nGP
          DO j = 1, nGP
-            intGaussP(1,iIntGP) = mu1(i)
-            intGaussP(2,iIntGP) = mu2(j)*(1.-mu1(i))
-            intGaussW(iIntGP)   = A1(i)*A2(j)      
-            iIntGP              = iIntGP + 1
-         ENDDO
-      ENDDO
-      !
-      IF (     ((ABS(SUM(intGaussW(:)))-0.5).GT.tol)  ) THEN
+            IntGaussP(iIntGP,1) = mu1(i)
+            IntGaussP(iIntGP,2) = mu2(j) * (1.0_dp - mu1(i))
+            IntGaussW(iIntGP) = A1(i) * A2(j)
+            iIntGP = iIntGP + 1
+         END DO
+      END DO
+
+      !**********************************************************************
+      ! Controllo della somma dei pesi
+      !**********************************************************************
+
+      IF (ABS(SUM(IntGaussW) - 0.5_dp) > tol) THEN
+
          WRITE(*,*) '| Integration points calculated with conical product.'
-         WRITE(*,*) '| Number of integration points is  ', nIntGP
-         WRITE(*,*) '| SUM of Weights is ', SUM(intGaussW(:)), ' and must be 0.5! '
+         WRITE(*,*) '| Number of integration points is ', nIntGP
+         WRITE(*,*) '| SUM of Weights is ', SUM(IntGaussW),' and must be 0.5!'
       END IF
-      ! 
+
    END SUBROUTINE TriangleQuadratureGJPoints
 
-
-  PURE ELEMENTAL FUNCTION gammln(xx)
-  !**********************************************************************
-  IMPLICIT NONE
-  !**********************************************************************
-  REAL(dp)             :: gammln,xx
-  INTEGER          :: j
-  REAL(dp)             :: ser,stp,tmp,x,y,cof(6)
-  PARAMETER(stp=  2.5066282746310005_dp  )
-  PARAMETER(cof= (/           &
-       76.18009172947146_dp    , &
-       -86.50532032941677_dp   , &
-       24.01409824083091_dp    , &
-       -1.231739572450155_dp   , &
-       .1208650973866179e-2_dp , &
-       -.5395239384953e-5_dp    /)       )
-  !**********************************************************************
-  INTENT(IN) :: xx
-  !**********************************************************************
-
-  x   = xx
-  y   = x
-  tmp = x+5.5d0
-  tmp = (x+0.5d0)*LOG(tmp)-tmp
-  ser = 1.000000000190015d0
-
-  DO  j=1,6
-     y  = y+1.d0
-     ser= ser+cof(j)/y
-  END DO
-
-  gammln=tmp+LOG(stp*ser/x)
-
-  RETURN
-
-END FUNCTION gammln
 
 PURE SUBROUTINE gauleg(x1,x2,x,w,n)
   !**********************************************************************
@@ -262,7 +186,7 @@ SUBROUTINE gaujac(x,w,n,alf,bet)
 
      stop 'too many iterations in gaujac'
 1    x(i)=z
-     w(i)=EXP(gammln(alf+n)+gammln(bet+n)-gammln(n+1.0_dp)-gammln(n+alfbet+1.0_dp))*temp*2.0_dp**alfbet/(pp*p2)
+     w(i)=EXP(LOG_GAMMA(alf+n)+LOG_GAMMA(bet+n)-LOG_GAMMA(n+1.0_dp)-LOG_GAMMA(n+alfbet+1.0_dp))*temp*2.0_dp**alfbet/(pp*p2)
   END DO
   RETURN
 END SUBROUTINE gaujac

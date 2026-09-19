@@ -41,7 +41,7 @@ USE OPC3D_Module, ONLY: OPC3D
     !   Parametri e caricamento mesh
     !***********************************************************************
 
-    ade = 1
+    ade = 2
 
     WRITE(*,'(A)')
     WRITE(*,'(A)') '**************************************************************'
@@ -69,7 +69,7 @@ USE OPC3D_Module, ONLY: OPC3D
     !   Definizione funzione integranda
     !***********************************************************************
 
-    WRITE(*,'(A)') 'Funzione integranda:   f(x,y,z) = 1'
+    WRITE(*,'(A)') 'Funzione integranda:   f(x,y,z) = x^2+y^2+z^2'
 
     !***********************************************************************
     !   Inizio regola di cubatura
@@ -80,7 +80,7 @@ USE OPC3D_Module, ONLY: OPC3D
 
     CALL CPU_TIME(t_start)
 
-    CALL OPC3D(ade, poly%vertici, poly%facce, 'GJ', XYZ, W)
+    CALL OPC3D(ade, poly%vertici, poly%facce, 'D', XYZ, W)
     ! CALL OPC3D(ade, poly%vertici, poly%facce, 'D', XYZ, W)
 
     CALL CPU_TIME(t_end)
@@ -119,7 +119,7 @@ USE OPC3D_Module, ONLY: OPC3D
         REAL(dp), INTENT(IN) :: y
         REAL(dp), INTENT(IN) :: z
 
-        f = 1.0_dp
+        f = x**2+y**2+z**2
 
     END FUNCTION f
 
