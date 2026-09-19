@@ -22,7 +22,7 @@ addpath(fullfile(projectRoot, 'src'));
 %  Parametri e caricamento mesh
 %**************************************************************************
 
-ade = 133;
+ade = 13;
 
 fprintf('\n');
 fprintf('**************************************************************\n');
@@ -89,7 +89,7 @@ fprintf('\n');
 fprintf('Inizio Cubatura...\n');
 
 tic;
-[XYZ, W] = OPC3D(ade, vertices, facets, "D");
+[XYZ, W] = OPC3D(ade, vertices, facets, "GJ");
 %[XYZ, W] = OPC3D(ade, vertices, facets, "GJ");
 elapsedTime = toc;
 

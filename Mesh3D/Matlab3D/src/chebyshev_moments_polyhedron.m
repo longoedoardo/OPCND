@@ -1,6 +1,6 @@
 function moments = chebyshev_moments_polyhedron(vertices, facets, ade, chebyshev_indices, dbox, method)
 
-%**************************************************************************
+%********************************************************************************
 %
 % function moments = chebyshev_moments_polyhedron(vertices, facets, ade,
 %                                           chebyshev_indices, dbox, method)
@@ -14,12 +14,12 @@ function moments = chebyshev_moments_polyhedron(vertices, facets, ade, chebyshev
 % campo vettoriale V = (f, 0, 0), dove f è la primitiva rispetto a x del
 % polinomio di Chebyshev considerato.
 %
-% L'integrazione su ciascuna faccia triangolare avviene direttamente in 3D
-% tramite una quadratura sul triangolo di riferimento, successivamente
-% mappata sul triangolo fisico tramite mapTrianglePoints.
+% La quadratura sulle facce triangolari viene costruita una sola volta
+% sul triangolo di riferimento e successivamente trasformata sul triangolo
+% fisico per ciascuna faccia.
 % Sono disponibili i metodi di Gauss-Jacobi e Dunavant.
 %
-%**************************************************************************
+%********************************************************************************
 % INPUT:
 %
 % vertices:          Matrice [m x 3] delle coordinate dei vertici.
@@ -35,23 +35,25 @@ function moments = chebyshev_moments_polyhedron(vertices, facets, ade, chebyshev
 %
 % dbox:              Iper-rettangolo [min_x, max_x, min_y, max_y, min_z, max_z]
 %                    che racchiude il dominio per la base di Chebyshev.
+%
 % method:
 %                    Metodo di integrazione sulle facce triangolari:
 %                    * "D": Metodo simmetrico di Dunavant
 %                    * "GJ": Metodo di Gauss-Jacobi
 %
-%**************************************************************************
+%********************************************************************************
 % OUTPUT:
 %
 % moments:           Vettore colonna contenente i momenti calcolati per
 %                    ogni tripla di indici in chebyshev_indices.
 %
-%**************************************************************************
+%********************************************************************************
 % Riferimento bibliografico:
 % [1] E.B. Chin, J.B. Lasserre, N. Sukumar: "Numerical integration of
 % homogeneous function on convex and nonconvex polygons and polyhedra".
 % Computational Mechanics, Vol. 56, No. 6, pp 967-981.
-%**************************************************************************
+%
+%********************************************************************************
 
 num_indici = size(chebyshev_indices, 1);
 n_facce = size(facets, 1);
@@ -63,85 +65,45 @@ v1 = vertices(facets(:, 1), :);
 v2 = vertices(facets(:, 2), :);
 v3 = vertices(facets(:, 3), :);
 
-%**************************************************************************
-% Metodo di Gauss-Jacobi
-%**************************************************************************
+% Costruzione della regola di quadratura sul triangolo di riferimento.
+[nodes_ref, weights_ref] = TriangleQuadrature(method, ade);
 
-if strcmp(method, "GJ")
+for k = 1:n_facce
 
-    % Grado di precisione richiesto: ade+1.
-    % Servono almeno nGP punti per dimensione tali che
-    % 2*nGP-1 >= ade+1.
-    nGP = ceil((ade + 2) / 2);
+    % Vertici della faccia triangolare
+    V = [v1(k,:); v2(k,:); v3(k,:)];
 
-    % Regola di quadratura sul triangolo di riferimento
-    [nodi_rif, pesi_rif] = TriangleGJQuadraturePoints(nGP);
+    % Trasformazione dei punti e dei pesi dal triangolo di riferimento
+    % al triangolo fisico.
+    [nodes_XYZW, WV_CUB] = ShiftingTriangleQuadrature( ...
+        V, nodes_ref, weights_ref);
 
-    % La stessa regola viene riutilizzata per tutte le facce.
-    for k = 1:n_facce
+    % Calcolo della normale alla faccia
+    A = V(2,:) - V(1,:);
+    B = V(3,:) - V(1,:);
 
-        Vk = [v1(k,:); v2(k,:); v3(k,:)];
+    % Prodotto vettoriale
+    cp = cross(A, B);
 
-        % Nodi fisici, pesi fisici e normale esterna sulla faccia triangolare
-        [nodes_XYZW, WV_CUB, norm_ext] = mapTriangleGJPoints( ...
-            nodi_rif, pesi_rif, Vk);
+    % Norma del prodotto vettoriale
+    area2 = norm(cp);
 
-        if all(norm_ext == 0)
-            % Faccia degenere: nessun contributo
-            continue;
-        end
-
-        % Calcolo dei momenti superficiali grezzi
-        moms_facet = cubature_tens_chebyshev_facet_V( ...
-            nodes_XYZW, WV_CUB, chebyshev_indices, dbox);
-
-        % Componente x della normale esterna, come richiesto dal
-        % teorema della divergenza applicato al campo V = (f, 0, 0)
-        chebyshev_moms(:, k) = norm_ext(1) * moms_facet;
-
+    if area2 <= 1e-14
+        % Faccia degenere: nessun contributo
+        chebyshev_moms(:, k) = 0;
+        continue;
     end
 
-%**************************************************************************
-% Metodo di Dunavant
-%**************************************************************************
-elseif strcmp(method, "D")
+    % Normale esterna unitaria
+    norm_ext = cp / area2;
 
-    % Grado di precisione richiesto: ade+1.
-    rule = ade + 1;
+    % Calcolo dei momenti superficiali grezzi
+    moms_facet = cubature_tens_chebyshev_facet_V( ...
+        nodes_XYZW, WV_CUB, chebyshev_indices, dbox);
 
-    % Regola di Dunavant sul triangolo di riferimento
-    [nodi_rif, pesi_rif] = TriangleDunavantQuadraturePoints(rule);
-
-    % La stessa regola viene riutilizzata per tutte le facce.
-    for k = 1:n_facce
-
-        % Vertici della faccia triangolare
-        A = v1(k,:);
-        B = v2(k,:);
-        C = v3(k,:);
-
-        % Mappatura dei nodi e dei pesi sul triangolo fisico
-        [nodes_XYZW, WV_CUB, norm_ext] = mapTriangleDunavantPoints( ...
-            nodi_rif, pesi_rif, A, B, C);
-
-        if all(norm_ext == 0)
-            % Faccia degenere, nessun contributo
-            continue;
-        end
-
-        % Calcolo dei momenti superficiali grezzi
-        moms_facet = cubature_tens_chebyshev_facet_V( ...
-            nodes_XYZW, WV_CUB, chebyshev_indices, dbox);
-
-        % Componente x della normale esterna, come richiesto dal
-        % teorema della divergenza applicato al campo V = (f, 0, 0)
-        chebyshev_moms(:, k) = norm_ext(1) * moms_facet;
-
-    end
-
-else
-
-    error('Metodo scelto non valido. Usare "GJ" oppure "D".');
+    % Componente x della normale esterna, come richiesto dal
+    % teorema della divergenza applicato al campo V = (f, 0, 0)
+    chebyshev_moms(:, k) = norm_ext(1) * moms_facet;
 
 end
 
