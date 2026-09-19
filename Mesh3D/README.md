@@ -104,7 +104,7 @@ Gli integrali sulle facce sono calcolati con una regola di quadratura sul triang
 
 | `method` | Regola | Note |
 |----------|--------|------|
-| `'GJ'`   | Prodotto conico di Gauss-Jacobi sul triangolo di riferimento | `nGP = ceil((ade+2)/2)` punti per direzione, cioè `nGP^2` punti per faccia. Nessun limite su `ade`. |
+| `'GJ'`   | Prodotto di Gauss-Jacobi sul triangolo di riferimento | `nGP = ceil((ade+2)/2)` punti per direzione, cioè `nGP^2` punti per faccia. Nessun limite su `ade`. |
 | `'D'`    | Regole di Dunavant | Si usa la regola di grado `ade+1`; le regole sono disponibili fino al grado 20, quindi `ade <= 19`. |
 
 Il grado di precisione richiesto sulle facce è `ade+1` (e non `ade`) perché la primitiva usata nel teorema della divergenza aumenta di uno il grado dell'integranda.
@@ -139,7 +139,7 @@ La funzione restituisce:
 - `XYZ`, matrice `(ade+1)^3 x 3` con le coordinate dei nodi di cubatura;
 - `W`, vettore con i relativi pesi.
 
-La funzione integranda viene valutata dopo la costruzione della regola:
+La funzione integranda può essere valutata dopo la costruzione della regola:
 
 ```matlab
 I = W' * f(XYZ(:,1), XYZ(:,2), XYZ(:,3));
@@ -178,7 +178,7 @@ dove:
 
 Le variabili reali usano il tipo `REAL(dp)` (doppia precisione) definito in `TypesDef.f90`.
 
-La funzione integranda non viene passata a `OPC3D`. Come nella versione MATLAB, viene valutata successivamente sui punti di cubatura:
+La funzione integranda non viene passata a `OPC3D`. Come nella versione MATLAB, può essere valutata successivamente sui punti di cubatura:
 
 ```fortran
 Integrale = 0.0_dp
@@ -238,10 +238,6 @@ make bunny
 Gli esempi vengono eseguiti dalla directory `examples/`, in modo che i file `.dat` possano essere caricati direttamente.
 
 Per scegliere il metodo di quadratura, modificare la chiamata a `OPC3D` nell'esempio (`'GJ'` oppure `'D'`).
-
-### Verifica rapida
-
-L'esempio `convex` integra la funzione costante `f = 1` con `ade = 1`. Il risultato deve coincidere con il volume della mesh, circa `1.7743437424807`.
 
 ### Pulizia e informazioni
 
