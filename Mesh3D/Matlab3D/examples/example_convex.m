@@ -12,7 +12,7 @@ addpath(fullfile(projectRoot, 'src'));
 %       Cubatura su dominio concavo
 %
 %   Descrizione:
-%       Questo esempio dimostra l'utilizzo del metodo OptimalPolyCuba3D per
+%       Questo esempio dimostra l'utilizzo del metodo OPC3D per
 %       l'integrazione di una funzione su un dominio poliedrale convessa,
 %       rappresentato da una mesh superficiale triangolare. 
 %
@@ -26,7 +26,7 @@ ade = 1;
 
 fprintf('\n');
 fprintf('**************************************************************\n');
-fprintf('                 OPTIMALPOLYCUBA3D\n');
+fprintf('                           OPC3D\n');
 fprintf('        Cubatura su Dominio Poliedrale Convesso\n');
 fprintf('**************************************************************\n');
 fprintf('\n');

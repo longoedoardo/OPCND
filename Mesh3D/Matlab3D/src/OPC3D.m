@@ -52,7 +52,7 @@ function [XYZ, W] = OPC3D(ade, vertices, facets, method)
 %**************************************************************************
 
 % Percorso della directory principale del progetto
-projectRoot = fileparts(mfilename('fullpath'));
+projectRoot = fileparts(fileparts(mfilename('fullpath')));
 
 % Aggiunta della cartella contenente le funzioni ausiliarie
 addpath(fullfile(projectRoot, 'src'));

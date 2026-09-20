@@ -12,7 +12,7 @@ addpath(fullfile(projectRoot, 'src'));
 %       Cubatura su dominio cubico
 %
 %   Descrizione:
-%       Questo esempio dimostra l'utilizzo del metodo OptimalPolyCuba3D
+%       Questo esempio dimostra l'utilizzo del metodo OPC3D
 %       per l'integrazione di funzioni polinomiali su un cubo, rappresentato
 %       mediante una mesh superficiale triangolare chiusa e orientata
 %       secondo le normali esterne.
@@ -29,7 +29,7 @@ addpath(fullfile(projectRoot, 'src'));
 
 fprintf('\n');
 fprintf('**************************************************************\n');
-fprintf('                 OPTIMALPOLYCUBA3D\n');
+fprintf('                       OPC3D\n');
 fprintf('                 Cubatura sul Cubo\n');
 fprintf('**************************************************************\n');
 fprintf('\n');
