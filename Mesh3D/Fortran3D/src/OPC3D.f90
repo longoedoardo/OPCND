@@ -115,6 +115,7 @@ INTEGER, ALLOCATABLE                                    :: chebyshev_indices(:,:
 
 REAL(dp), ALLOCATABLE                                   :: bbox(:)
 REAL(dp), ALLOCATABLE                                   :: moments_ch(:)
+REAL(dp), ALLOCATABLE                                   :: alpha(:)
 !***********************************************************************
 
 ! Controllo della disponibilità delle regole di Dunavant
@@ -180,9 +181,10 @@ CALL scale_rule(XYZW_tens_ref, bbox, XYZW_tens)
 ! Pesi di cubatura ottenuti ricombinando la regola di riferimento
 IF (ALLOCATED(W)) DEALLOCATE(W)
 ALLOCATE(W(N))
-DO k = 1, N
-    W(k) = XYZW_tens(k,4) * DOT_PRODUCT(V_ref(k,:), moments_ch / coeffs)
-END DO
+ALLOCATE(alpha(N_mom))
+
+alpha = moments_ch / coeffs
+W = XYZW_tens(:,4) * MATMUL(V_ref, alpha)
 
 IF (ALLOCATED(XYZ)) DEALLOCATE(XYZ)
 ALLOCATE(XYZ(N,3))

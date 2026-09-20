@@ -123,6 +123,7 @@ MODULE CubatureFunctions
    SUBROUTINE chebyshev_moments_polyhedron(vertices, facets, ade, chebyshev_indices, dbox, method, moments)
 
       !*******************************************************************************
+      !
       ! Calcola i momenti dei polinomi di Chebyshev sul poliedro tridimensionale
       ! delimitato dalla mesh triangolare definita da vertices e facets.
       ! I momenti volumetrici sono trasformati, mediante il teorema della divergenza,
@@ -139,13 +140,6 @@ MODULE CubatureFunctions
       ! contributo ai momenti. I contributi ottenuti da tutte le facce vengono infine
       ! sommati per ottenere i momenti del poliedro.
       !
-      ! Si assume che:
-      !
-      !   - vertices contenga le coordinate dei vertici della mesh;
-      !   - facets contenga la connettivita' triangolare della superficie;
-      !   - le facce siano orientate coerentemente;
-      !   - l'orientamento delle facce sia compatibile con le normali esterne;
-      !   - la superficie triangolare sia chiusa.
       !*******************************************************************************
 
       USE TriangleQuadratureGJ
@@ -168,7 +162,9 @@ MODULE CubatureFunctions
       !*******************************************************************************
       INTEGER :: num_indici
       INTEGER :: n_facce
+      INTEGER :: n_quad
       INTEGER :: k
+      INTEGER :: q
 
       REAL(dp) :: A(3)
       REAL(dp) :: B(3)
@@ -180,7 +176,6 @@ MODULE CubatureFunctions
       REAL(dp), ALLOCATABLE :: XYZW(:,:)
       REAL(dp), ALLOCATABLE :: WV_CUB(:)
 
-      REAL(dp), ALLOCATABLE :: chebyshev_moms(:,:)
       REAL(dp), ALLOCATABLE :: moms_facet_raw(:)
 
       REAL(dp), ALLOCATABLE :: nodes(:,:)
@@ -195,21 +190,19 @@ MODULE CubatureFunctions
       num_indici = SIZE(chebyshev_indices, 1)
       n_facce = SIZE(facets, 1)
 
-      ! Allocazione dei momenti sulle singole facce
-      ALLOCATE(chebyshev_moms(num_indici, n_facce))
-      chebyshev_moms = 0.0_dp
-
       CALL triangle_quadrature(method, ade, nodes, weights)
+      n_quad = SIZE(weights)
+
+      ALLOCATE(XYZW(n_quad, 3))
+      ALLOCATE(WV_CUB(n_quad))
+      ALLOCATE(moments(num_indici))
+      moments = 0.0_dp
 
       DO k = 1, n_facce
 
          V_face(1,:) = vertices(facets(k,1),:)
          V_face(2,:) = vertices(facets(k,2),:)
          V_face(3,:) = vertices(facets(k,3),:)
-
-         ! Trasformazione dei punti di quadratura dal triangolo
-         ! di riferimento al triangolo fisico
-         CALL shiftingTriangleQuadrature(V_face, nodes, weights, XYZW, WV_CUB)
 
          ! Calcolo della normale alla faccia
          A = V_face(2,:) - V_face(1,:)
@@ -222,26 +215,25 @@ MODULE CubatureFunctions
          area2 = SQRT(SUM(cp**2))
 
          IF (area2 <= 1.0d-14) THEN
-            chebyshev_moms(:,k) = 0.0_dp
             CYCLE
          END IF
 
+         ! Trasformazione affine dei punti dal triangolo di riferimento
+         ! al triangolo fisico x = V1 + xi * (V2-V1) + eta * (V3-V1).
+         DO q = 1, n_quad
+            XYZW(q,:) = V_face(1,:) + nodes(q,1) * A + nodes(q,2) * B
+         END DO
+
+         WV_CUB = 0.5_dp * area2 * weights
          norm_ext = cp / area2
 
          ! Calcolo dei momenti sulla faccia
          CALL cubature_tens_chebyshev_facet_V(XYZW, WV_CUB, chebyshev_indices, dbox, moms_facet_raw)
 
          ! Contributo della faccia
-         chebyshev_moms(:,k) = norm_ext(1) * moms_facet_raw
+         moments = moments + norm_ext(1) * moms_facet_raw
 
       END DO
-
-      ALLOCATE(moments(num_indici))
-
-      ! Somma dei contributi delle singole facce
-      moments = SUM(chebyshev_moms, DIM=2)
-
-      DEALLOCATE(chebyshev_moms)
 
    END SUBROUTINE chebyshev_moments_polyhedron
 
@@ -265,16 +257,13 @@ MODULE CubatureFunctions
       !*******************************************************************************
       ! Variabili locali
       !*******************************************************************************
-      INTEGER                :: n, m, deg_max, c, iv
+      INTEGER                :: n, m, max_i, max_j, max_k, c, iv
       REAL(dp)                :: B1
       REAL(dp), ALLOCATABLE   :: XN(:), YN(:), ZN(:)
       REAL(dp), ALLOCATABLE   :: TX(:, :), TY(:, :), TZ(:, :)
       REAL(dp), ALLOCATABLE   :: IntX(:, :)
       INTEGER, ALLOCATABLE   :: idx_i(:), idx_j(:), idx_k(:)
-      REAL(dp), ALLOCATABLE   :: IntX_cols(:, :), TY_cols(:, :), TZ_cols(:, :)
-      REAL(dp), ALLOCATABLE   :: TYTZ(:, :), F(:, :)
       REAL(dp), ALLOCATABLE   :: w(:)
-      INTEGER, ALLOCATABLE   :: i_vec(:)
       !*******************************************************************************
 
       n = SIZE(nodes, 1)
@@ -290,36 +279,31 @@ MODULE CubatureFunctions
       B1 = (dbox(2) - dbox(1)) / 2.0_dp
       w = weights(:)
 
-      deg_max = MAXVAL(chebyshev_indices(:, 1))
+      max_i = MAXVAL(chebyshev_indices(:, 1))
+      max_j = MAXVAL(chebyshev_indices(:, 2))
+      max_k = MAXVAL(chebyshev_indices(:, 3))
 
-      ALLOCATE(TX(n, deg_max + 2))
-      ALLOCATE(TY(n, deg_max + 1))
-      ALLOCATE(TZ(n, deg_max + 1))
+      ALLOCATE(TX(n, max_i + 2))
+      ALLOCATE(TY(n, max_j + 1))
+      ALLOCATE(TZ(n, max_k + 1))
 
-      CALL chebpolys(deg_max + 1, XN, TX)
-      CALL chebpolys(deg_max, YN, TY)
-      CALL chebpolys(deg_max, ZN, TZ)
+      CALL chebpolys(max_i + 1, XN, TX)
+      CALL chebpolys(max_j, YN, TY)
+      CALL chebpolys(max_k, ZN, TZ)
 
-      ALLOCATE(IntX(n, deg_max + 1))
+      ALLOCATE(IntX(n, max_i + 1))
       IntX = 0.0_dp
     
       IntX(:, 1) = XN 
 
-      IF (deg_max >= 1) THEN
+      IF (max_i >= 1) THEN
          IntX(:, 2) = (XN**2) / 2.0_dp
       END IF
 
-      IF (deg_max >= 2) THEN
-         ALLOCATE(i_vec(deg_max - 1))
-         DO c = 1, deg_max - 1
-            i_vec(c) = c + 1  
-         END DO
-         
-         DO c = 1, SIZE(i_vec)
-            iv = i_vec(c)
+      IF (max_i >= 2) THEN
+         DO iv = 2, max_i
             IntX(:, iv + 1) = TX(:, iv+2) / (2.0_dp*(iv+1)) - TX(:, iv) / (2.0_dp*(iv-1))
          END DO
-         DEALLOCATE(i_vec)
       END IF
 
       ALLOCATE(idx_i(m), idx_j(m), idx_k(m))
@@ -327,27 +311,14 @@ MODULE CubatureFunctions
       idx_j = chebyshev_indices(:, 2) + 1
       idx_k = chebyshev_indices(:, 3) + 1
 
-      ALLOCATE(IntX_cols(n, m), TY_cols(n, m), TZ_cols(n, m))
-      DO c = 1, m
-         IntX_cols(:, c) = IntX(:, idx_i(c))
-         TY_cols(:, c)   = TY(:,   idx_j(c))
-         TZ_cols(:, c)   = TZ(:,   idx_k(c))
-      END DO
-
-      ALLOCATE(TYTZ(n, m))
-      TYTZ = TY_cols * TZ_cols
-
-      ALLOCATE(F(n, m))
-      F = (B1 * IntX_cols) * TYTZ
-
       IF (ALLOCATED(chebyshev_moms)) DEALLOCATE(chebyshev_moms)
       ALLOCATE(chebyshev_moms(m))
 
       DO c = 1, m
-         chebyshev_moms(c) = SUM(w * F(:, c))
+         chebyshev_moms(c) = B1 * SUM(w * IntX(:, idx_i(c)) * TY(:, idx_j(c)) * TZ(:, idx_k(c)))
       END DO
 
-      DEALLOCATE(XN, YN, ZN, w, TX, TY, TZ, IntX, idx_i, idx_j, idx_k, IntX_cols, TY_cols, TZ_cols, TYTZ, F)
+      DEALLOCATE(XN, YN, ZN, w, TX, TY, TZ, IntX, idx_i, idx_j, idx_k)
 
    END SUBROUTINE cubature_tens_chebyshev_facet_V
 
