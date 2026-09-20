@@ -123,10 +123,9 @@ fprintf('Integrale esatto:      %.15e\n', I_exact);
 fprintf('\n');
 fprintf('Inizio Cubatura...\n');
 
-tic;
 [XYZ, W] = OPC3D(ade, vertices, facets, "D");
 %[XYZ, W] = OPC3D(ade, vertices, facets, "GJ");
-elapsedTime = toc;
+elapsedTime = timeit(@() OPC3D(ade, vertices, facets, "D"));
 
 I = W' * f1(XYZ(:,1), XYZ(:,2), XYZ(:,3));
 
@@ -165,10 +164,9 @@ fprintf('Integrale esatto:      %.15e\n', I_exact);
 fprintf('\n');
 fprintf('Inizio Cubatura...\n');
 
-tic;
 [XYZ, W] = OPC3D(ade, vertices, facets, "D");
 %[XYZ, W] = OPC3D(ade, vertices, facets, "GJ");
-elapsedTime = toc;
+elapsedTime = timeit(@() OPC3D(ade, vertices, facets, "D"));
 
 
 I = W' * f2(XYZ(:,1), XYZ(:,2), XYZ(:,3));
@@ -208,10 +206,9 @@ fprintf('Integrale esatto:      %.15e\n', I_exact);
 fprintf('\n');
 fprintf('Inizio Cubatura...\n');
 
-tic;
 [XYZ, W] = OPC3D(ade, vertices, facets, "D");
 %[XYZ, W] = OPC3D(ade, vertices, facets, "GJ");
-elapsedTime = toc;
+elapsedTime = timeit(@() OPC3D(ade, vertices, facets, "D"));
 
 I = W' * f3(XYZ(:,1), XYZ(:,2), XYZ(:,3));
 

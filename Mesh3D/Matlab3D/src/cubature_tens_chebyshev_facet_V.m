@@ -17,65 +17,78 @@ function chebyshev_moms = cubature_tens_chebyshev_facet_V(nodes, weights, chebys
 %   chebyshev_indices   Matrice degli indici (i, j, k) della base tensoriale.
 %   dbox                Iper-rettangolo [min_x, max_x, ..., max_z] del dominio.
 %
+%**************************************************************************
+%
 % OUTPUT:
 %   moments             Vettore colonna con i momenti integrati per ciascuna tripla.
 %
 %**************************************************************************
 
-% Estrazione coordinate normalizzate e fattori di scala
-inv_dx = 2.0 / (dbox(2) - dbox(1));
-inv_dy = 2.0 / (dbox(4) - dbox(3));
-inv_dz = 2.0 / (dbox(6) - dbox(5));
+% Numero di punti di quadratura e numero di momenti richiesti
+num_pts = size(nodes, 1);
+num_moments = size(chebyshev_indices, 1);
 
-mid_x  = (dbox(1) + dbox(2)) * 0.5;
-mid_y  = (dbox(3) + dbox(4)) * 0.5;
-mid_z  = (dbox(5) + dbox(6)) * 0.5;
-
-XN = (nodes(:, 1) - mid_x) * inv_dx;
-YN = (nodes(:, 2) - mid_y) * inv_dy;
-ZN = (nodes(:, 3) - mid_z) * inv_dz;
-
-B1 = 1.0 / inv_dx; % Fattore di scala originale per x
+X_ref = (2.0 * nodes - (dbox(1,:) + dbox(2,:))) ./ ...
+    (dbox(2,:) - dbox(1,:));
 
 % Grado massimo per asse
 max_i = max(chebyshev_indices(:, 1));
 max_j = max(chebyshev_indices(:, 2));
 max_k = max(chebyshev_indices(:, 3));
 
-% Calcolo polinomi di Chebyshev solo fino al grado necessario per asse
-TX = chebpolys(max_i + 1, XN);
-TY = chebpolys(max_j, YN);
-TZ = chebpolys(max_k, ZN);
+idx_i = chebyshev_indices(:,1) + 1;
+idx_j = chebyshev_indices(:,2) + 1;
+idx_k = chebyshev_indices(:,3) + 1;
 
-% Pre-calcolo della matrice delle primitive rispetto a X (IntX)
-n = size(TX, 1);
-IntX = zeros(n, max_i + 1);
-IntX(:, 1) = XN;                  % i = 0
+% Calcolo delle matrici di Chebyshev.
+%
+% La direzione x richiede un grado aggiuntivo poiche' la primitiva di
+% T_i(x), per i >= 2, contiene T_(i+1)(x). Nelle altre direzioni e'
+% sufficiente il grado massimo effettivamente richiesto.
 
-if max_i >= 1
-    IntX(:, 2) = 0.5 * (XN .* XN); % i = 1
+x = X_ref(:,1);
+TX = chebpolys(max_i + 1, x);
+TY = chebpolys(max_j, X_ref(:,2));
+TZ = chebpolys(max_k, X_ref(:,3));
+
+% Costruzione diretta delle primitive nella direzione x.
+% Viene allocata solamente la matrice necessaria per i momenti richiesti.
+PhiX = zeros(num_pts, num_moments);
+
+% Gli indici nella direzione x vengono separati in tre casi per evitare
+% integrazione numerica e utilizzare le primitive analitiche.
+is0 = (chebyshev_indices(:,1) == 0);
+is1 = (chebyshev_indices(:,1) == 1);
+isN = (chebyshev_indices(:,1) >= 2);
+% Primitiva di T_0(x) = 1
+PhiX(:,is0) = repmat(x, 1, nnz(is0));
+
+% Primitiva di T_1(x) = x
+PhiX(:,is1) = repmat(0.5 .* x.^2, 1, nnz(is1));
+
+% Primitiva analitica di T_i(x), per i >= 2
+if any(isN)
+    i = chebyshev_indices(isN,1).';
+    PhiX(:,isN) = ...
+        TX(:,i + 2) .* (i ./ (i.^2 - 1)) - ...
+        x .* TX(:,i + 1) ./ (i - 1);
 end
 
-if max_i >= 2
-    i_vec = 2:max_i;
-    denom1 = i_vec + 1;
-    denom2 = i_vec - 1;
-    % Formula analitica vettorializzata
-    IntX(:, i_vec + 1) = (i_vec .* TX(:, i_vec + 2) ./ (i_vec.^2 - 1)) - ...
-        (XN .* TX(:, i_vec + 1) ./ denom2);
-end
+% Estrazione delle sole colonne necessarie nelle altre direzioni.
+TY_cols = TY(:,idx_j);
+TZ_cols = TZ(:,idx_k);
 
-idx_i = chebyshev_indices(:, 1) + 1;
-idx_j = chebyshev_indices(:, 2) + 1;
-idx_k = chebyshev_indices(:, 3) + 1;
+% Costruzione vettorializzata dell'integrando.
+% Il peso della quadratura viene applicato direttamente alla primitiva
+% nella direzione x.
+P = PhiX .* weights(:);
+P = P .* TY_cols;
+P = P .* TZ_cols;
 
-% Estrazione colonne selettive
-IntX_cols = IntX(:, idx_i);
-TY_cols   = TY(:,   idx_j);
-TZ_cols   = TZ(:,   idx_k);
+% La trasformazione dalla coordinata fisica x alla coordinata di
+% riferimento introduce il fattore dx = (xmax - xmin)/2 dxi.
+B1 = 0.5 * (dbox(2,1) - dbox(1,1));
 
-% Combinazione finale con i pesi tramite moltiplicazione matrice-vettore
-w = weights(:);
-chebyshev_moms = B1 * (((IntX_cols .* TY_cols .* TZ_cols)' * w));
-
+% Somma dei contributi dei punti di quadratura
+chebyshev_moms = B1 .* sum(P, 1).';
 end

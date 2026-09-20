@@ -17,6 +17,7 @@ function [nodes, weights] = TriangleQuadrature(method, ade)
 % I nodi e i pesi restituiti sono riferiti al triangolo di riferimento.
 %
 %**************************************************************************
+%
 % INPUT:
 %
 % method:             Metodo di quadratura da utilizzare:
@@ -26,6 +27,7 @@ function [nodes, weights] = TriangleQuadrature(method, ade)
 % ade:                Grado algebrico massimo dei polinomi da integrare.
 %
 %**************************************************************************
+%
 % OUTPUT:
 %
 % nodes:              Matrice [n_points x 2] contenente le coordinate dei

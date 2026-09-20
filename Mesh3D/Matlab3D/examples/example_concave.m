@@ -83,10 +83,9 @@ hold off;
 fprintf('\n');
 fprintf('Inizio Cubatura...\n');
 
-tic;
 [XYZ, W] = OPC3D(ade, vertices, facets, "D");
 %[XYZ, W] = OPC3D(ade, vertices, facets, "GJ");
-elapsedTime = toc;
+elapsedTime = timeit(@() OPC3D(ade, vertices, facets, "D"));
 
 I = W' * f(XYZ(:,1), XYZ(:,2), XYZ(:,3));
 

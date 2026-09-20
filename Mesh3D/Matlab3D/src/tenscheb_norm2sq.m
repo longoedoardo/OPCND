@@ -7,19 +7,25 @@ function [coeffs] = tenscheb_norm2sq(chebyshev_indices)
 % tensoriale di Chebyshev di grado totale "ade".
 %
 %**************************************************************************
-% Input:
 %
-% ade: grado totale della base polinomiale.
+% INPUT:
 %
-% chebyshev_indices: indici della base tensoriale di Chebyshev.
-%       Se chebyshev_indices(s,:) = [i j k], allora il s-esimo polinomio è:
-%                       phi_s(x,y,z) = T_i(x) * T_j(y) * T_k(z)
-%       dove T_m(u) è il polinomio di Chebyshev di grado m.
+%   ade: 
+%           grado totale della base polinomiale
+%
+% chebyshev_indices: 
+%           indici della base tensoriale di Chebyshev. Se chebyshev_indices(s,:) 
+%           = [i j k], allora il s-esimo polinomio è: phi_s(x,y,z) 
+%           = T_i(x) * T_j(y) * T_k(z) dove T_m(u) è il polinomio di 
+%           Chebyshev di grado m
+%
 %**************************************************************************
-% Output:
+%
+% OUTPUT:
 %
 % coeffs: il valore dell'integrale del quadrato di ogni polinomio della base
-%         (prodotto scalare del polinomio con se stesso).
+%         (prodotto scalare del polinomio con se stesso)
+%
 %**************************************************************************
 
 [~, d] = size(chebyshev_indices);

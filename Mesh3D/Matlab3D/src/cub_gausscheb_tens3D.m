@@ -1,12 +1,33 @@
 function XYZW = cub_gausscheb_tens3D(deg)
 
 %**************************************************************************
-
+%
 % function XYZW = cub_gausscheb_tens3D(deg)
-
+%
 % Calcola i punti e i pesi per l'integrazione numerica (cubatura) in 3D.
 % Utilizza una griglia a prodotto tensoriale basata sui nodi di Gauss-Chebyshev.
-
+%
+%**************************************************************************
+%
+% INPUT:
+%
+%   deg:
+%               Grado massimo della base polinomiale per la quale si
+%               desidera costruire la griglia di cubatura.
+%
+%               Il numero di nodi nella singola direzione e' scelto come
+%
+%                   n = ceil((deg + 1) / 2)
+%
+%**************************************************************************
+%
+% OUTPUT:
+%
+%   XYZW:
+%               Matrice Nq x 4 contenente i nodi e i pesi della quadratura
+%               tensoriale 3D. Il numero totale di punti e' Nq = n^3 e il 
+%               peso tensoriale e' costante ed uguale a w = (pi / n)^3.
+%
 %**************************************************************************
 
 n = ceil((deg + 1) / 2);

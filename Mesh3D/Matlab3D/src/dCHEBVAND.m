@@ -10,6 +10,31 @@ function V = dCHEBVAND(deg, X, chebyshev_indices)
 % traslata (shifted) sull'iper-rettangolo definito da "dbox".
 %
 %**************************************************************************
+%
+% INPUT:
+%
+%   deg:
+%               Grado massimo dei polinomi di Chebyshev utilizzati nella
+%               costruzione della matrice.
+%
+%   X:
+%               Matrice contenente le coordinate dei m punti di valutazione 
+%               in d dimensioni.
+%
+%   chebyshev_indices:
+%               Matrice N x d contenente gli indici che definiscono gli 
+%               elementi della base tensoriale di Chebyshev.
+%
+%**************************************************************************
+%
+% OUTPUT:
+%
+%   V:
+%               Matrice di Chebyshev-Vandermonde. L'elemento V(i,j) contiene 
+%               il valore del j-esimo elemento della base tensoriale 
+%               valutato nel i-esimo punto di X.
+%
+%**************************************************************************
 
 % default box
 dbox = [-1 -1 -1; 1 1 1];
