@@ -1,4 +1,4 @@
-MODULE PrepCheap
+MODULE ReferenceFunctions4D
 USE TypesDef
 
     IMPLICIT NONE
@@ -112,4 +112,71 @@ USE TypesDef
 
     END SUBROUTINE mono_next_grlex
 
-END MODULE PrepCheap
+   SUBROUTINE dCHEBVAND(deg, X, duples, V)
+      INTEGER, INTENT(IN)                         :: deg
+      REAL(dp), INTENT(IN)                        :: X(:,:)
+      INTEGER, INTENT(IN)                         :: duples(:,:)
+      REAL(dp), ALLOCATABLE, INTENT(OUT)          :: V(:,:)
+
+      INTEGER                                     :: m, d, ncols, k, col, g
+      REAL(dp), ALLOCATABLE                       :: T_dim(:,:)
+
+      m = SIZE(X, 1)
+      d = SIZE(X, 2)
+      ncols = SIZE(duples, 1)
+
+      ALLOCATE(V(m, ncols))
+      ALLOCATE(T_dim(m, 0:deg))
+      V = 1.0_dp
+
+      DO k = 1, d
+         T_dim(:,0) = 1.0_dp
+         IF (deg >= 1) THEN
+            T_dim(:,1) = X(:,k)
+            DO g = 2, deg
+               T_dim(:,g) = 2.0_dp * X(:,k) * T_dim(:,g-1) - T_dim(:,g-2)
+            END DO
+         END IF
+         DO col = 1, ncols
+            V(:,col) = V(:,col) * T_dim(:, duples(col,k))
+         END DO
+      END DO
+   END SUBROUTINE dCHEBVAND
+
+   SUBROUTINE tenscheb_norm2sq(chebyshev_indices, coeffs)
+      INTEGER, INTENT(IN)                         :: chebyshev_indices(:,:)
+      REAL(dp), ALLOCATABLE, INTENT(OUT)          :: coeffs(:)
+
+      INTEGER                                     :: i, j, n, d, non_zero_counter
+
+      n = SIZE(chebyshev_indices, 1)
+      d = SIZE(chebyshev_indices, 2)
+      ALLOCATE(coeffs(n))
+
+      DO i = 1, n
+         non_zero_counter = 0
+         DO j = 1, d
+            IF (chebyshev_indices(i,j) /= 0) non_zero_counter = non_zero_counter + 1
+         END DO
+         coeffs(i) = PI**REAL(d, dp) / 2.0_dp**REAL(non_zero_counter, dp)
+      END DO
+   END SUBROUTINE tenscheb_norm2sq
+
+   SUBROUTINE scale_rule(XYZTW_tens_ref, dbox, XYZTW_tens)
+      REAL(dp), INTENT(IN)                        :: XYZTW_tens_ref(:,:)
+      REAL(dp), INTENT(IN)                        :: dbox(2,4)
+      REAL(dp), ALLOCATABLE, INTENT(OUT)          :: XYZTW_tens(:,:)
+
+      INTEGER                                     :: j
+      REAL(dp)                                    :: center, half_width
+
+      ALLOCATE(XYZTW_tens(SIZE(XYZTW_tens_ref,1), SIZE(XYZTW_tens_ref,2)))
+      DO j = 1, 4
+         center = 0.5_dp * (dbox(1,j) + dbox(2,j))
+         half_width = 0.5_dp * (dbox(2,j) - dbox(1,j))
+         XYZTW_tens(:,j) = center + half_width * XYZTW_tens_ref(:,j)
+      END DO
+      XYZTW_tens(:,5) = XYZTW_tens_ref(:,5)
+   END SUBROUTINE scale_rule
+
+END MODULE ReferenceFunctions4D

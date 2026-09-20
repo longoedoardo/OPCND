@@ -243,7 +243,7 @@ SUBROUTINE gaujac(x,w,n,alf,bet)
         r3=1./(1.+8.*alf/((6.28+alf)*n*n))
         z=z+(z-x(n-2))*r1*r2*r3
      ELSE
-        z=3.*x(i-1)-3.*x(i-2)+x(i-3)
+        z=3.*x(MAX(i-1,1))-3.*x(MAX(i-2,1))+x(MAX(i-3,1))
      ENDIF
      alfbet=alf+bet
      DO its=1,MAXIT

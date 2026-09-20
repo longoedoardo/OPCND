@@ -1,10 +1,57 @@
-MODULE PrismQuadratureGJ
+MODULE PrismQuadrature
   USE TypesDef
   USE triangleQuadratureGJ
+  USE TriangleQuadratureDunavant
   
   IMPLICIT NONE
 
 CONTAINS
+
+  SUBROUTINE PrismQuadratureRule(ade, method, XI_ref, ETA_ref, T_ref, W_ref)
+      INTEGER, INTENT(IN)                   :: ade
+      CHARACTER(LEN=*), INTENT(IN)          :: method
+      REAL(dp), ALLOCATABLE, INTENT(OUT)    :: XI_ref(:), ETA_ref(:)
+      REAL(dp), ALLOCATABLE, INTENT(OUT)    :: T_ref(:), W_ref(:)
+
+      REAL(dp), ALLOCATABLE                 :: tri_nodes(:,:), tri_weights(:)
+      REAL(dp), ALLOCATABLE                 :: tau_nodes(:), tau_weights(:)
+      INTEGER                               :: nGP_tri, n1D, n_tri, n_tau, i, k, idx
+
+      SELECT CASE (TRIM(method))
+      CASE ('DCC', 'DGL')
+         CALL TriangleQuadratureDunavantPoints(ade + 1, tri_nodes, tri_weights)
+         tri_weights = 0.5_dp * tri_weights
+      CASE ('GJCC', 'GJL')
+         nGP_tri = CEILING(REAL(ade + 2, dp) / 2.0_dp)
+         CALL TriangleGJPoints(nGP_tri, tri_nodes, tri_weights)
+      CASE DEFAULT
+         ERROR STOP 'Metodo non valido. Usare DCC, DGL, GJCC oppure GJL.'
+      END SELECT
+
+      SELECT CASE (TRIM(method))
+      CASE ('DCC', 'GJCC')
+         CALL ClenshawCurtisInterval(ade + 4, tau_nodes, tau_weights)
+      CASE ('DGL', 'GJL')
+         n1D = CEILING(REAL(ade + 4, dp) / 2.0_dp)
+         ALLOCATE(tau_nodes(n1D), tau_weights(n1D))
+         CALL gauleg(0.0_dp, 1.0_dp, tau_nodes, tau_weights, n1D)
+      END SELECT
+
+      n_tri = SIZE(tri_weights)
+      n_tau = SIZE(tau_weights)
+      ALLOCATE(XI_ref(n_tri * n_tau), ETA_ref(n_tri * n_tau), T_ref(n_tri * n_tau), W_ref(n_tri * n_tau))
+
+      idx = 1
+      DO k = 1, n_tau
+         DO i = 1, n_tri
+            XI_ref(idx) = tri_nodes(i,1)
+            ETA_ref(idx) = tri_nodes(i,2)
+            T_ref(idx) = tau_nodes(k)
+            W_ref(idx) = tau_weights(k) * tri_weights(i)
+            idx = idx + 1
+         END DO
+      END DO
+   END SUBROUTINE PrismQuadratureRule
 
   SUBROUTINE reference_prism_quadrature(ade, XI_ref, ETA_ref, T_ref, W_ref)
 
@@ -82,6 +129,89 @@ CONTAINS
       DEALLOCATE(P_std, W_std, r, s, tau_nodes_loc, tau_weights_loc)
 
    END SUBROUTINE reference_prism_quadrature
+
+   SUBROUTINE TriangleGJPoints(nGP, nodes, weights)
+      INTEGER, INTENT(IN)                    :: nGP
+      REAL(dp), ALLOCATABLE, INTENT(OUT)     :: nodes(:,:), weights(:)
+
+      REAL(dp), ALLOCATABLE                  :: pstd(:,:), wstd(:)
+      INTEGER                                :: n_points
+
+      n_points = nGP * nGP
+      ALLOCATE(pstd(2, n_points), wstd(n_points))
+      CALL TriangleQuadraturePoints(pstd, wstd, n_points, nGP)
+      ALLOCATE(nodes(n_points, 2), weights(n_points))
+      nodes(:,1) = pstd(1,:)
+      nodes(:,2) = pstd(2,:)
+      weights = wstd
+   END SUBROUTINE TriangleGJPoints
+
+   SUBROUTINE ClenshawCurtisInterval(n, nodes, weights)
+      INTEGER, INTENT(IN)                    :: n
+      REAL(dp), ALLOCATABLE, INTENT(OUT)     :: nodes(:), weights(:)
+
+      INTEGER                                :: N_cc, i, j
+      REAL(dp)                               :: theta_i, sum_w, fact_j, g_cc
+
+      N_cc = n - 1
+      ALLOCATE(nodes(n), weights(n))
+
+      IF (n == 1) THEN
+         nodes(1) = 0.5_dp
+         weights(1) = 1.0_dp
+         RETURN
+      END IF
+
+      DO i = 1, n
+         theta_i = PI * REAL(i - 1, dp) / REAL(N_cc, dp)
+         sum_w = 0.0_dp
+         DO j = 1, N_cc / 2
+            fact_j = 2.0_dp
+            IF (MOD(N_cc, 2) == 0 .AND. j == N_cc / 2) fact_j = 1.0_dp
+            sum_w = sum_w + fact_j * COS(2.0_dp * REAL(j, dp) * theta_i) / (1.0_dp - 4.0_dp * REAL(j, dp)**2)
+         END DO
+         g_cc = 1.0_dp
+         IF (i == 1 .OR. i == n) g_cc = 0.5_dp
+         nodes(n - i + 1) = 0.5_dp * (COS(theta_i) + 1.0_dp)
+         weights(n - i + 1) = (1.0_dp / REAL(N_cc, dp)) * g_cc * (1.0_dp + sum_w)
+      END DO
+   END SUBROUTINE ClenshawCurtisInterval
+
+   SUBROUTINE ShiftingPrismQuadrature(V, XI_ref, ETA_ref, T_ref, W_ref, XYZTW, WV_X)
+      REAL(dp), INTENT(IN)     :: V(6,4)
+      REAL(dp), INTENT(IN)     :: XI_ref(:), ETA_ref(:), T_ref(:), W_ref(:)
+      REAL(dp), INTENT(OUT)    :: XYZTW(:,:), WV_X(:)
+
+      INTEGER                  :: j
+      REAL(dp)                 :: A0(4), B0(4), C0(4), A1(4), B1(4), C1(4)
+      REAL(dp)                 :: lato1_base(4), lato2_base(4), lato1_top(4), lato2_top(4)
+      REAL(dp), ALLOCATABLE    :: base(:,:), top(:,:)
+      REAL(dp), ALLOCATABLE    :: dy_dxi(:), dz_dxi(:), dy_deta(:), dz_deta(:), Nx(:)
+
+      A0 = V(1,:); B0 = V(2,:); C0 = V(3,:)
+      A1 = V(4,:); B1 = V(5,:); C1 = V(6,:)
+
+      lato1_base = B0 - A0
+      lato2_base = C0 - A0
+      lato1_top = B1 - A1
+      lato2_top = C1 - A1
+
+      ALLOCATE(base(SIZE(W_ref),4), top(SIZE(W_ref),4))
+      DO j = 1, 4
+         base(:,j) = A0(j) + XI_ref * lato1_base(j) + ETA_ref * lato2_base(j)
+         top(:,j) = A1(j) + XI_ref * lato1_top(j) + ETA_ref * lato2_top(j)
+         XYZTW(:,j) = (1.0_dp - T_ref) * base(:,j) + T_ref * top(:,j)
+      END DO
+
+      ALLOCATE(dy_dxi(SIZE(W_ref)), dz_dxi(SIZE(W_ref)), dy_deta(SIZE(W_ref)), dz_deta(SIZE(W_ref)), Nx(SIZE(W_ref)))
+      dy_dxi = (1.0_dp - T_ref) * lato1_base(2) + T_ref * lato1_top(2)
+      dz_dxi = (1.0_dp - T_ref) * lato1_base(3) + T_ref * lato1_top(3)
+      dy_deta = (1.0_dp - T_ref) * lato2_base(2) + T_ref * lato2_top(2)
+      dz_deta = (1.0_dp - T_ref) * lato2_base(3) + T_ref * lato2_top(3)
+
+      Nx = dy_dxi * dz_deta - dz_dxi * dy_deta
+      WV_X = W_ref * Nx
+   END SUBROUTINE ShiftingPrismQuadrature
 
    SUBROUTINE PrismQuad4D(V, XI_ref, ETA_ref, T_ref, W_ref, baricentro, XYZTW, WV_X)
 
@@ -254,4 +384,4 @@ CONTAINS
 
    END SUBROUTINE PrismQuad4D
 
-END MODULE PrismQuadratureGJ
+END MODULE PrismQuadrature
