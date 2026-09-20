@@ -13,7 +13,7 @@ addpath(fullfile(projectRoot, 'src'));
 %
 %   Descrizione:
 %       Questo esempio dimostra l'utilizzo del metodo
-%       OptimalPolyCuba4D_Tensor per l'integrazione di una funzione su un
+%       OPC4D_Tensor per l'integrazione di una funzione su un
 %       dominio poliedrale concavo in movimento per tau in [0,1],
 %       rappresentato mediante una mesh superficiale triangolare.
 %
@@ -31,7 +31,7 @@ ade = 1;
 
 fprintf('\n');
 fprintf('**************************************************************\n');
-fprintf('                 OPTIMALPOLYCUBA4D\n');
+fprintf('                   OPC4D_Tensor\n');
 fprintf('              - Metodo Tensoriale -\n');
 fprintf('    Cubatura su Dominio Poliedrale Concavo in Movimento\n');
 fprintf('**************************************************************\n');
@@ -122,7 +122,10 @@ fprintf('\n');
 fprintf('Inizio Cubatura...\n');
 
 tic;
-[XYZT, W] = OptimalPolyCuba4D_Tensor(ade, vertici_iniziali,vertici_finali,facets);
+[XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'GJCC');
+% [XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'GJL');
+% [XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'DGL');
+% [XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'DCC');
 elapsedTime = toc;
 
 I = W' * f(XYZT(:,1), XYZT(:,2), XYZT(:,3), XYZT(:,4));

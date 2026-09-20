@@ -7,8 +7,33 @@ function V = dCHEBVAND(deg, X, chebyshev_indices)
 % sui punti "X"
 %
 %**************************************************************************
+%
+% INPUT:
+%
+%   deg:
+%               Grado massimo dei polinomi di Chebyshev da calcolare.
+%
+%   X:
+%               Matrice m x d contenente le coordinate dei punti in cui
+%               valutare la base. Ogni riga rappresenta un punto e ogni
+%               colonna una coordinata.
+%
+%   chebyshev_indices:
+%               Matrice N x d contenente gli indici della base tensoriale
+%               di Chebyshev. 
+%
+%**************************************************************************
+%
+% OUTPUT:
+%
+%   V:
+%               Matrice m x N di Chebyshev--Vandermonde, nella quale
+%               l'elemento V(i,j) contiene il valore del j-esimo
+%               polinomio della base nel punto X(i,:).
+%
+%**************************************************************************
 
-[m, d] = size(X); % m = numero di punti, d = dimensione (es. 4)
+[m, d] = size(X); % m = numero di punti
 N = size(chebyshev_indices, 1); % Numero di monomi (colonne di V)
 
 % Definizione automatica del box di riferimento [-1, 1] per le 'd' dimensioni

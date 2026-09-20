@@ -7,22 +7,12 @@ function moms_facet_raw = cubature_tens_chebyshev_facet_4D(XYZTW, WV_CUB, chebys
 %
 % Momenti superficiali di Chebyshev sulla singola iperfaccia di un
 % poliedro quadridimensionale.
-%
-% Dato un insieme di nodi e pesi di cubatura su una singola iperfaccia
-% tridimensionale di un poliedro 4D, calcola il contributo superficiale
-% ai momenti della base tensoriale di Chebyshev
-%
-%       T_i(x) * T_j(y) * T_k(z) * T_l(t).
-%
-% La primitiva viene calcolata analiticamente lungo la prima coordinata x.
-% Questo permette di applicare il Teorema della Divergenza scegliendo
-% un campo vettoriale con derivata rispetto a x uguale al prodotto
-% tensoriale dei polinomi di Chebyshev.
-%
-% La costruzione e' completamente vettorializzata rispetto ai punti di
-% quadratura e agli indici della base, evitando un ciclo sui momenti.
-% In questo modo il prodotto tensoriale dei polinomi viene realizzato
-% mediante operazioni matriciali e prodotti elemento-per-elemento.
+% Per ogni elemento della base tensoriale viene costruita analiticamente la
+% primitiva rispetto a x. 
+% La costruzione dei polinomi e' completamente vettorializzata rispetto
+% ai punti di quadratura e agli indici della base. Nella direzione x viene 
+% calcolata una funzione di grado aggiuntivo per costruire analiticamente 
+% la primitiva dei polinomi di Chebyshev.
 %
 %**************************************************************************
 %
@@ -41,6 +31,8 @@ function moms_facet_raw = cubature_tens_chebyshev_facet_4D(XYZTW, WV_CUB, chebys
 %                      [xmin ymin zmin taumin;
 %                       xmax ymax zmax taumax].
 %
+%**************************************************************************
+%
 % OUTPUT:
 %   moms_facet_raw     Vettore [M x 1] contenente i contributi superficiali
 %                      ai momenti di Chebyshev.
@@ -49,6 +41,7 @@ function moms_facet_raw = cubature_tens_chebyshev_facet_4D(XYZTW, WV_CUB, chebys
 
 % Numero di punti di quadratura e numero di momenti richiesti
 num_pts = size(XYZTW, 1);
+num_moments = size(chebyshev_indices, 1);
 
 % Trasformazione affine dal dominio fisico al dominio di riferimento [-1,1]^4
 X_ref = (2.0 * XYZTW - (dbox(1,:) + dbox(2,:))) ./ (dbox(2,:) - dbox(1,:));
@@ -82,89 +75,50 @@ idx_l = chebyshev_indices(:,4) + 1;
 % primitiva per i >= 2 contiene infatti il polinomio T_(i+1)(x). 
 % Di conseguenza, per costruire la primitiva del termine di grado massimo 
 % T_max_i e' necessario conoscere anche T_(max_i+1).
+% Nelle altre tre direzioni non e' necessaria alcuna primitiva e quindi
+% e' sufficiente arrivare al grado massimo richiesto.
 
-TX = chebpolys(max_i + 1, X_ref(:,1));
-TY = chebpolys(max_j,     X_ref(:,2));
-TZ = chebpolys(max_k,     X_ref(:,3));
-TT = chebpolys(max_l,     X_ref(:,4));
+x  = X_ref(:,1);
+TX = chebpolys(max_i + 1, x);
+TY = chebpolys(max_j, X_ref(:,2));
+TZ = chebpolys(max_k, X_ref(:,3));
+TT = chebpolys(max_l, X_ref(:,4));
 
-% Costruzione vettorializzata delle primitive nella direzione x
 
-IntX = zeros(num_pts, max_i + 1);
+PhiX = zeros(num_pts, num_moments);
 
-% Primitiva di T_0(x) = 1
-IntX(:,1) = X_ref(:,1);
+% Gli indici nella direzione x vengono separati in tre casi. Questo
+% permette di evitare integrazione numerica lungo x
 
-% Primitiva di T_1(x) = x
-if max_i >= 1
-    IntX(:,2) = 0.5 * (X_ref(:,1) .* X_ref(:,1));
+is0 = (chebyshev_indices(:,1) == 0);
+is1 = (chebyshev_indices(:,1) == 1);
+isN = (chebyshev_indices(:,1) >= 2);
+
+PhiX(:,is0) = repmat(x, 1, nnz(is0));
+PhiX(:,is1) = repmat(0.5 .* x.^2, 1, nnz(is1));
+
+if any(isN)
+    i = chebyshev_indices(isN,1).';
+
+PhiX(:,isN) = ...
+    TX(:,i + 2) .* (i ./ (i.^2 - 1)) - x .* TX(:,i + 1) ./ (i - 1);
 end
 
-% Primitiva di T_i(x), i >= 2
-if max_i >= 2
+% Costruzione della funzione primitiva in modo tensoriale. Per ogni
+% multi-indice si costruisce Phi_x = [int T_i(x) dx] T_j(y) T_k(z) T_l(tau).
+% Il vettore WV_CUB contiene gia' il peso della quadratura e il fattore
+% geometrico orientato n_x dS. Il prodotto elemento per elemento con
+% PhiX restituisce l'integrando della formula di superficie.
+P = PhiX .* WV_CUB(:);
+P = P .* TY(:,idx_j);
+P = P .* TZ(:,idx_k);
+P = P .* TT(:,idx_l);
 
-    i_vec = 2:max_i;
+% La trasformazione dalla coordinata fisica x alla coordinata di
+% riferimento xi introduce il fattore dx = (xmax - xmin)/2 dxi.
 
-    IntX(:,i_vec + 1) = ...
-        i_vec .* TX(:,i_vec + 2) ./ (i_vec.^2 - 1) - ...
-        X_ref(:,1) .* TX(:,i_vec + 1) ./ (i_vec - 1);
+B1 = 0.5 * (dbox(2,1) - dbox(1,1));
 
-end
-
-% Fattore di scala associato alla trasformazione della coordinata x
-
-% Nel caso 3D si definiva inv_dx = 2/(x_max-x_min),
-% e quindi ottenevamo B1 = 1/inv_dx.
-%
-% La stessa struttura viene mantenuta qui per garantire coerenza tra
-% l'implementazione 3D e quella 4D.
-
-inv_dx = 2.0 / (dbox(2) - dbox(1));
-B1 = 1.0 / inv_dx;
-
-% Estrazione delle colonne richieste dalla base di Chebyshev
-IntX_cols = IntX(:,idx_i);
-TY_cols   = TY(:,idx_j);
-TZ_cols   = TZ(:,idx_k);
-TT_cols   = TT(:,idx_l);
-
-% Per ogni punto di quadratura e per ogni indice (i,j,k,l) si costruisce
-% il prodotto
-%
-%       Phi_i(x)* T_j(y)* T_k(z)* T_l(tau).
-%
-% Le quattro matrici [N x M] vengono quindi moltiplicate elemento per
-% elemento.
-%
-% Il risultato e' una matrice [N x M], nella quale:
-%
-%   - ogni riga corrisponde a un punto di quadratura;
-%   - ogni colonna corrisponde a un momento della base.
-%
-% La trasposizione produce una matrice [M x N], che viene poi moltiplicata
-% per il vettore dei pesi WV_CUB [N x 1].
-%
-% Si ottiene quindi direttamente un vettore [M x 1]:
-%
-%       moms_facet_raw(m)
-%
-% rappresenta il contributo della singola iperfaccia al momento
-% corrispondente alla m-esima riga di chebyshev_indices.
-%
-% Il fattore B1 converte infine la primitiva dalla coordinata di
-% riferimento alla coordinata fisica.
-%
-% La struttura e' esattamente analoga al caso 3D:
-%
-%   3D:
-%       (IntX_cols .* TY_cols .* TZ_cols)' * w
-%
-%   4D:
-%       (IntX_cols .* TY_cols .* TZ_cols .* TT_cols)' * WV_CUB
-%
-% L'unica differenza e' quindi l'aggiunta del quarto fattore
-% T_l(tau), corrispondente alla nuova coordinata spazio-temporale.
-
-moms_facet_raw = B1*((IntX_cols .* TY_cols .* TZ_cols .* TT_cols)' * WV_CUB(:));
+moms_facet_raw = B1 .* sum(P, 1).';
 
 end

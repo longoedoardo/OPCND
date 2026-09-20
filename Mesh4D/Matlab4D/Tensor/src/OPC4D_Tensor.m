@@ -1,8 +1,8 @@
-function [XYZT, W] = OptimalPolyCuba4D_Tensor(ade, vertici_iniziali, vertici_finali, facets)
+function [XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali, vertici_finali, facets, method)
 
 %**************************************************************************
 %
-% function [XYZT, W] = OptimalPolyCuba4D_Tensor(ade, vertici_iniziali, ...
+% function [XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali, ...
 %                                   vertici_finali, facets)
 %
 % Costruisce una regola di cubatura quadridimensionale per un dominio
@@ -68,9 +68,20 @@ function [XYZT, W] = OptimalPolyCuba4D_Tensor(ade, vertici_iniziali, vertici_fin
 %       Matrice N_f x 3 contenente la connettività della mesh superficiale
 %       triangolare.
 %
-%       Ogni riga contiene gli indici dei tre vertici che definiscono
-%       una faccia triangolare. L'orientamento delle facce deve essere
-%       coerente con la normale uscente del dominio tridimensionale.
+%   method:
+%       Stringa che specifica la regola di quadratura utilizzata per
+%       l'integrazione sulle iperfacce laterali del dominio 4D.
+%
+%       Sono disponibili i seguenti metodi:
+%
+%           'DCC'  : Dunavant--Clenshaw--Curtis
+%           'DGL'  : Dunavant--Gauss--Legendre
+%           'GJCC' : Gauss--Jacobi--Clenshaw--Curtis
+%           'GJL'  : Gauss--Jacobi--Gauss--Legendre
+%
+%       Le regole sono costruite come prodotto tensoriale tra una
+%       quadratura sul triangolo di riferimento e una quadratura
+%       unidimensionale sull'intervallo temporale [0,1].
 %
 %**************************************************************************
 %
@@ -153,8 +164,20 @@ V_ref = dCHEBVAND(ade, X, chebyshev_indices);
 %
 %**************************************************************************
 
-% Costruzione del dominio 4D spazio-temporale e iperfacce
-[vertici_4D, Hyperfacets] = HyperfacetsSTD4D(vertici_iniziali, vertici_finali, facets);
+% Numero di vertici della mesh tridimensionale
+num_vertici = size(vertici_iniziali, 1);
+
+% Inizializzazione dei vertici spazio-temporali
+vertici_4D = zeros(2 * num_vertici, 4);
+
+% Configurazione iniziale (tau = 0)
+vertici_4D(1:num_vertici, 1:3) = vertici_iniziali;
+vertici_4D(1:num_vertici, 4) = 0.0;
+
+% Configurazione finale (tau = 1)
+vertici_4D(num_vertici + 1:2*num_vertici, 1:3) = vertici_finali;
+vertici_4D(num_vertici + 1:2*num_vertici, 4) = 1.0;
+
 
 % Calcolo dell'iper-rettangolo che racchiude l'intero dominio spazio-temporale
 limiti_min = min(vertici_4D, [], 1);
@@ -162,7 +185,7 @@ limiti_max = max(vertici_4D, [], 1);
 bbox = [limiti_min; limiti_max];
 
 % Calcolo dei momenti di Chebyshev sul poliedro 4D tramite il teorema della divergenza
-moments_ch = chebyshev_moments_polyhedron_4D(vertici_4D, Hyperfacets, ade, chebyshev_indices, bbox);
+moments_ch = chebyshev_moments_polyhedron_4D(vertici_4D, facets, ade, chebyshev_indices, bbox, method);
 
 % Riscalamento della regola di cubatura sulla bounding box reale 4D
 XYZTW_tens = scale_rule(XYZTW_tens_ref, bbox);

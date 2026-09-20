@@ -14,7 +14,7 @@ addpath(fullfile(projectRoot, 'src'));
 %
 %   Descrizione:
 %       Questo esempio dimostra l'utilizzo del metodo
-%       OptimalPolyCuba4D_Tensor per l'integrazione di funzioni su un 
+%       OPC4D_Tensor per l'integrazione di funzioni su un 
 %       dominio poliedrale in movimento per tau in [0,1], rappresentato 
 %       mediante una mesh superficiale triangolare chiusa e orientata 
 %       secondo le normali esterne.
@@ -33,7 +33,7 @@ addpath(fullfile(projectRoot, 'src'));
 %**************************************************************************
 fprintf('\n');
 fprintf('**************************************************************\n');
-fprintf('                 OPTIMALPOLYCUBA4D\n');
+fprintf('                   OPC4D_Tensor\n');
 fprintf('                 Metodo Tensoriale\n');
 fprintf('            Cubatura su Cubo in Movimento\n');
 fprintf('**************************************************************\n');
@@ -180,19 +180,20 @@ fprintf('\n');
 fprintf('Inizio Cubatura...\n');
 
 tic;
-
-[XYZtau, W] = OptimalPolyCuba4D_Tensor(ade, vertici_iniziali, vertici_finali, facets);
-
+[XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'GJCC');
+% [XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'GJL');
+% [XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'DGL');
+% [XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'DCC');
 elapsedTime = toc;
 
-I = W' * f1(XYZtau(:,1), XYZtau(:,2), XYZtau(:,3), XYZtau(:,4));
+I = W' * f1(XYZT(:,1), XYZT(:,2), XYZT(:,3), XYZT(:,4));
 
 fprintf('Fine Cubatura...\n');
 
 error_abs = abs(I - I_exact);
 
 fprintf('\n');
-fprintf('Numero di nodi 4D:    %d\n', size(XYZtau,1));
+fprintf('Numero di nodi 4D:    %d\n', size(XYZT,1));
 fprintf('Integrale numerico:    %.15e\n', I);
 fprintf('Errore assoluto:       %.6e\n', error_abs);
 fprintf('Tempo di calcolo:      %.6e s\n', elapsedTime);
@@ -225,19 +226,20 @@ fprintf('\n');
 fprintf('Inizio Cubatura...\n');
 
 tic;
-
-[XYZtau, W] = OptimalPolyCuba4D_Tensor(ade, vertici_iniziali, vertici_finali, facets);
-
+[XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'GJCC');
+% [XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'GJL');
+% [XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'DGL');
+% [XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'DCC');
 elapsedTime = toc;
 
-I = W' * f2(XYZtau(:,1), XYZtau(:,2), XYZtau(:,3), XYZtau(:,4));
+I = W' * f2(XYZT(:,1), XYZT(:,2), XYZT(:,3), XYZT(:,4));
 
 fprintf('Fine Cubatura...\n');
 
 error_abs = abs(I - I_exact);
 
 fprintf('\n');
-fprintf('Numero di nodi 4D:    %d\n', size(XYZtau,1));
+fprintf('Numero di nodi 4D:    %d\n', size(XYZT,1));
 fprintf('Integrale numerico:    %.15e\n', I);
 fprintf('Errore assoluto:       %.6e\n', error_abs);
 fprintf('Tempo di calcolo:      %.6e s\n', elapsedTime);
@@ -270,19 +272,20 @@ fprintf('\n');
 fprintf('Inizio Cubatura...\n');
 
 tic;
-
-[XYZtau, W] = OptimalPolyCuba4D_Tensor(ade, vertici_iniziali, vertici_finali, facets);
-
+[XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'GJCC');
+% [XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'GJL');
+% [XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'DGL');
+% [XYZT, W] = OPC4D_Tensor(ade, vertici_iniziali,vertici_finali,facets, 'DCC');
 elapsedTime = toc;
 
-I = W' * f3(XYZtau(:,1), XYZtau(:,2), XYZtau(:,3), XYZtau(:,4));
+I = W' * f3(XYZT(:,1), XYZT(:,2), XYZT(:,3), XYZT(:,4));
 
 fprintf('Fine Cubatura...\n');
 
 error_abs = abs(I - I_exact);
 
 fprintf('\n');
-fprintf('Numero di nodi 4D:    %d\n', size(XYZtau,1));
+fprintf('Numero di nodi 4D:    %d\n', size(XYZT,1));
 fprintf('Integrale numerico:    %.15e\n', I);
 fprintf('Errore assoluto:       %.6e\n', error_abs);
 fprintf('Tempo di calcolo:      %.6e s\n', elapsedTime);
