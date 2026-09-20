@@ -1,4 +1,4 @@
-function [XYZtau, W] = OptimalPolyCuba4D_MoL(ade, n_tau, vertici_iniziali, vertici_finali, facets)
+function [XYZtau, W] = OPC4D_MoL(ade, n_tau, vertici_iniziali, vertici_finali, facets, method)
 
 %**************************************************************************
 %
@@ -42,6 +42,10 @@ function [XYZtau, W] = OptimalPolyCuba4D_MoL(ade, n_tau, vertici_iniziali, verti
 %       Matrice M x 3 contenente la connettività della mesh superficiale
 %       triangolare. Ogni riga contiene gli indici dei tre vertici che
 %       definiscono una faccia triangolare.
+%   - method:
+%       Metodo di integrazione sulle facce triangolari:
+%       * "D": Metodo simmetrico di Dunavant
+%       * "GJ": Metodo di Gauss-Jacobi
 %
 %   OUTPUT:
 %   - XYZtau:
@@ -68,6 +72,14 @@ projectRoot = fileparts(fileparts(mfilename('fullpath')));
 
 % Aggiunta della cartella contenente le funzioni ausiliarie
 addpath(fullfile(projectRoot, 'src'));
+
+% Controllo della disponibilità delle regole di Dunavant
+if strcmp(method, "D") && ade > 20
+    warning(['Le regole di Dunavant sono disponibili solo fino al ', ...
+        'grado 20. Cambiare metodo o modificare ade']);
+    return;
+end
+
 
 %**************************************************************************
 %
@@ -124,7 +136,7 @@ for k = 1:n_tau
 
     % Momenti della base sul poliedro (teorema della divergenza sulle facce)
     moments_ch = chebyshev_moments_polyhedron(vertices_tau, facets, ade, ...
-    chebyshev_indices, bbox_tau);
+    chebyshev_indices, bbox_tau, method);
 
     % Riscalamento della griglia di riferimento sulla bounding box reale corrente
     XYZW_tens = scale_rule(XYZW_tens_ref, bbox_tau);

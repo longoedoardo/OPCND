@@ -12,7 +12,7 @@ addpath(fullfile(projectRoot, 'src'));
 %       Cubatura 4D su dominio poliedrale concavo in movimento
 %
 %   Descrizione:
-%       Questo esempio dimostra l'utilizzo del metodo OptimalPolyCuba4D_MoL
+%       Questo esempio dimostra l'utilizzo del metodo OPC4D_MoL
 %       per l'integrazione di una funzione su un dominio poliedrale in
 %       movimento per tau in [0,1] concavo, rappresentato mediante una mesh
 %       superficiale triangolare.
@@ -28,7 +28,7 @@ n_tau = 1000;
 
 fprintf('\n');
 fprintf('**************************************************************\n');
-fprintf('                 OPTIMALPOLYCUBA4D\n');
+fprintf('                       OPC4D_MoL\n');
 fprintf('                - Metodo delle Linee -\n');
 fprintf('    Cubatura su Dominio Poliedrale Concavo in Movimento\n');
 fprintf('**************************************************************\n');
@@ -114,8 +114,10 @@ fprintf('\n');
 fprintf('Inizio Cubatura...\n');
 
 tic;
-[XYZtau, W] = OptimalPolyCuba4D_MoL(ade, n_tau, vertici_iniziali, vertici_finali, facets);
+[XYZtau, W] = OPC4D_MoL(ade, n_tau, vertici_iniziali, vertici_finali, facets, 'GJ');
+% [XYZtau, W] = OPC4D_MoL(ade, n_tau, vertici_iniziali, vertici_finali, facets, 'D');
 elapsedTime = toc;
+
 
 % Calcolo dell'integrale mediante la regola di cubatura 4D
 I = W' * f(XYZtau(:,1), XYZtau(:,2), XYZtau(:,3), XYZtau(:,4));

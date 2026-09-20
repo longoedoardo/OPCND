@@ -12,7 +12,7 @@ addpath(fullfile(projectRoot, 'src'));
 %       Cubatura 4D su dominio poliedrale (Cubo) in rototraslazione rigida
 %
 %   Descrizione:
-%       Questo esempio dimostra l'utilizzo del metodo OptimalPolyCuba4D_MoL
+%       Questo esempio dimostra l'utilizzo del metodo OPC4D_MoL
 %       per l'integrazione di funzioni su un dominio poliedrale in movimento
 %       per tau in [0,1], rappresentato mediante una mesh superficiale
 %       triangolare chiusa e orientata secondo le normali esterne.
@@ -35,7 +35,7 @@ addpath(fullfile(projectRoot, 'src'));
 
 fprintf('\n');
 fprintf('**************************************************************\n');
-fprintf('                 OPTIMALPOLYCUBA4D\n');
+fprintf('                     OPC4D_MoL\n');
 fprintf('                Metodo delle Linee\n');
 fprintf('       Cubatura su Cubo in Rototraslazione\n');
 fprintf('**************************************************************\n');
@@ -196,7 +196,8 @@ fprintf('Inizio Cubatura...\n');
 
 tic;
 
-[XYZtau, W] = OptimalPolyCuba4D_MoL(ade, n_tau, vertici_iniziali, vertici_finali, facets);
+[XYZtau, W] = OPC4D_MoL(ade, n_tau, vertici_iniziali, vertici_finali, facets, 'GJ');
+% [XYZtau, W] = OPC4D_MoL(ade, n_tau, vertici_iniziali, vertici_finali, facets, 'D');
 
 elapsedTime = toc;
 
@@ -241,7 +242,8 @@ fprintf('Inizio Cubatura...\n');
 
 tic;
 
-[XYZtau, W] = OptimalPolyCuba4D_MoL(ade, n_tau, vertici_iniziali, vertici_finali, facets);
+[XYZtau, W] = OPC4D_MoL(ade, n_tau, vertici_iniziali, vertici_finali, facets, 'GJ');
+% [XYZtau, W] = OPC4D_MoL(ade, n_tau, vertici_iniziali, vertici_finali, facets, 'D');
 
 elapsedTime = toc;
 
