@@ -1,158 +1,311 @@
-# =====================================================================
-# Makefile per mainOptimalPolyCuba4D_MoL
-# Progetto: Cubatura 4D (spazio + tempo) su poliedri concavi e convessi
+# ==============================================================================
+#
+# Makefile
+#
+# OptimalPolyCuba4D
+#
 # Autore: Edoardo Longo
-# Data: 09/08/2026
-# =====================================================================
+# Data: 19/09/2026
+#
+# ==============================================================================
 
-# =====================================================================
-# SEZIONE 1 — NOME DELL'ESEGUIBILE
-# =====================================================================
-EXE = mainOptimalPolyCuba4D_MoL
 
-# =====================================================================
-# SEZIONE 2 — COMPILATORE
-# =====================================================================
-F90 = gfortran
+# ==============================================================================
+# SEZIONE 1 — CONFIGURAZIONE
+# ==============================================================================
 
-# =====================================================================
-# SEZIONE 3 — DIRECTORY DI BUILD
-# =====================================================================
-OBJ_DIR = build
-MOD_DIR = modules_build
-SRC_DIR = src
+FC = gfortran
 
-# =====================================================================
-# SEZIONE 4 — FLAG DI COMPILAZIONE
-# =====================================================================
-F90FLAGS = -O3 \
-           -fdefault-real-8 \
-           -fdefault-double-8 \
-           -ffree-line-length-none \
-           -Wall \
-           -Wextra \
-           -J$(MOD_DIR) \
-           -I$(MOD_DIR)
+TARGETS = \
+example_convex \
+example_concave \
+example_polynomial \
+example_rigidmotion
 
-# =====================================================================
-# SEZIONE 5 — LISTA DEI MODULI
-# =====================================================================
-MOD_OBJ = \
-    $(OBJ_DIR)/TypesDef.o \
-    $(OBJ_DIR)/TimeDiscretization.o \
-    $(OBJ_DIR)/PrepCheap.o \
-    $(OBJ_DIR)/PolyhedronMesh.o \
-    $(OBJ_DIR)/CubaCheap.o \
-    $(OBJ_DIR)/triangleQuadratureGJ.o
+BUILD_DIR   = build
+MODULE_DIR  = modules_build
+SRC_DIR     = src
+EXAMPLE_DIR = examples
 
-# Oggetto del programma principale
-MAIN_OBJ = $(OBJ_DIR)/mainOptimalPolyCuba4D_MoL.o
 
-# Lista completa di tutti gli oggetti da linkare
-OBJS = $(MOD_OBJ) $(MAIN_OBJ)
+# ==============================================================================
+# SEZIONE 2 — FLAG DI COMPILAZIONE
+# ==============================================================================
 
-# =====================================================================
-# SEZIONE 6 — TARGET PHONY
-# =====================================================================
-.PHONY: all setup clean distclean run info
+FFLAGS = \
+-O3 \
+-ffree-line-length-none \
+-Wall \
+-Wextra \
+-J$(MODULE_DIR) \
+-I$(MODULE_DIR)
 
-# =====================================================================
-# SEZIONE 7 — TARGET PRINCIPALI
-# =====================================================================
-all: setup $(EXE)
+LDFLAGS = -O3
+
+
+# ==============================================================================
+# SEZIONE 3 — FILE OGGETTO
+# ==============================================================================
+
+MODULE_OBJECTS = \
+$(BUILD_DIR)/TypesDef.o \
+$(BUILD_DIR)/ReferenceFunctions.o \
+$(BUILD_DIR)/PolyhedronMesh.o \
+$(BUILD_DIR)/TimeDiscretization.o \
+$(BUILD_DIR)/TriangleQuadratureGJ.o \
+$(BUILD_DIR)/TriangleQuadratureDunavant.o \
+$(BUILD_DIR)/CubatureFunctions.o \
+$(BUILD_DIR)/OPC4D_MoL.o
+
+
+EXAMPLE_OBJECTS = \
+$(BUILD_DIR)/example_convex.o \
+$(BUILD_DIR)/example_concave.o \
+$(BUILD_DIR)/example_polynomial.o \
+$(BUILD_DIR)/example_rigidmotion.o
+
+
+# ==============================================================================
+# SEZIONE 4 — TARGET PRINCIPALI
+# ==============================================================================
+
+.PHONY: all examples \
+convex concave polynomial rigidmotion \
+run clean distclean info
+
+all: examples
+
+examples: $(TARGETS)
 	@echo ""
-	@echo ">>> Compilazione completata <<<"
-
-# =====================================================================
-# SEZIONE 8 — CREAZIONE DELLE DIRECTORY DI BUILD
-# =====================================================================
-setup:
-	@mkdir -p $(OBJ_DIR)
-	@mkdir -p $(MOD_DIR)
-
-# =====================================================================
-# SEZIONE 9 — LINKER
-# =====================================================================
-$(EXE): $(OBJS)
+	@echo "=============================================="
+	@echo "  Tutti gli esempi 4D MoL sono stati compilati."
+	@echo "=============================================="
 	@echo ""
-	@echo "======================================"
-	@echo " Linking finale : $(EXE)"
-	@echo "======================================"
-	$(F90) $(F90FLAGS) $(OBJS) -o $(EXE)
-	@echo " Eseguibile pronto: ./$(EXE)"
-	@echo "======================================"
-
-# =====================================================================
-# SEZIONE 10 — REGOLA GENERICA DI COMPILAZIONE
-# =====================================================================
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.f90
-	@echo "  Compiling: $<"
-	$(F90) $(F90FLAGS) -c $< -o $@
-
-# =====================================================================
-# SEZIONE 11 — DIPENDENZE ESPLICITE
-# =====================================================================
-$(OBJ_DIR)/TypesDef.o: $(SRC_DIR)/TypesDef.f90
-
-$(OBJ_DIR)/TimeDiscretization.o: $(SRC_DIR)/TimeDiscretization.f90 \
-    $(OBJ_DIR)/TypesDef.o
-
-$(OBJ_DIR)/PrepCheap.o: $(SRC_DIR)/PrepCheap.f90 \
-    $(OBJ_DIR)/TypesDef.o
-
-$(OBJ_DIR)/PolyhedronMesh.o: $(SRC_DIR)/PolyhedronMesh.f90 \
-    $(OBJ_DIR)/TypesDef.o
-
-$(OBJ_DIR)/triangleQuadratureGJ.o: $(SRC_DIR)/triangleQuadratureGJ.f90 \
-    $(OBJ_DIR)/TypesDef.o
-
-$(OBJ_DIR)/CubaCheap.o: $(SRC_DIR)/CubaCheap.f90 \
-    $(OBJ_DIR)/TypesDef.o \
-    $(OBJ_DIR)/triangleQuadratureGJ.o
-
-$(OBJ_DIR)/mainOptimalPolyCuba4D_MoL.o: $(SRC_DIR)/mainOptimalPolyCuba4D_MoL.f90 \
-    $(OBJ_DIR)/TypesDef.o \
-    $(OBJ_DIR)/PolyhedronMesh.o \
-    $(OBJ_DIR)/TimeDiscretization.o \
-    $(OBJ_DIR)/PrepCheap.o \
-    $(OBJ_DIR)/triangleQuadratureGJ.o \
-    $(OBJ_DIR)/CubaCheap.o
-
-# =====================================================================
-# SEZIONE 12 — TARGET DI ESECUZIONE
-# =====================================================================
-run: all
+	@echo "  Eseguibili:"
+	@echo "    ./example_convex"
+	@echo "    ./example_concave"
+	@echo "    ./example_polynomial"
+	@echo "    ./example_rigidmotion"
 	@echo ""
-	@echo ">>> Avvio $(EXE) <<<"
-	./$(EXE)
 
-# =====================================================================
-# SEZIONE 13 — TARGET DI PULIZIA
-# =====================================================================
+
+# ==============================================================================
+# SEZIONE 5 — CREAZIONE DIRECTORY
+# ==============================================================================
+
+$(BUILD_DIR) $(MODULE_DIR):
+	@mkdir -p $@
+
+
+# ==============================================================================
+# SEZIONE 6 — COMPILAZIONE DEI MODULI FORTRAN
+# ==============================================================================
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.f90 | $(BUILD_DIR) $(MODULE_DIR)
+	@echo "  Compiling  $<"
+	$(FC) $(FFLAGS) -c $< -o $@
+
+
+# ==============================================================================
+# SEZIONE 7 — DIPENDENZE DEI MODULI
+# ==============================================================================
+
+$(BUILD_DIR)/TypesDef.o: \
+$(SRC_DIR)/TypesDef.f90
+
+
+$(BUILD_DIR)/ReferenceFunctions.o: \
+$(SRC_DIR)/ReferenceFunctions.f90 \
+$(BUILD_DIR)/TypesDef.o
+
+
+$(BUILD_DIR)/PolyhedronMesh.o: \
+$(SRC_DIR)/PolyhedronMesh.f90 \
+$(BUILD_DIR)/TypesDef.o
+
+
+$(BUILD_DIR)/TimeDiscretization.o: \
+$(SRC_DIR)/TimeDiscretization.f90 \
+$(BUILD_DIR)/TypesDef.o
+
+
+$(BUILD_DIR)/TriangleQuadratureGJ.o: \
+$(SRC_DIR)/TriangleQuadratureGJ.f90 \
+$(BUILD_DIR)/TypesDef.o
+
+
+$(BUILD_DIR)/TriangleQuadratureDunavant.o: \
+$(SRC_DIR)/TriangleQuadratureDunavant.f90 \
+$(BUILD_DIR)/TypesDef.o
+
+
+$(BUILD_DIR)/CubatureFunctions.o: \
+$(SRC_DIR)/CubatureFunctions.f90 \
+$(BUILD_DIR)/TypesDef.o \
+$(BUILD_DIR)/TriangleQuadratureGJ.o \
+$(BUILD_DIR)/TriangleQuadratureDunavant.o
+
+
+$(BUILD_DIR)/OPC4D_MoL.o: \
+$(SRC_DIR)/OPC4D_MoL.f90 \
+$(BUILD_DIR)/TypesDef.o \
+$(BUILD_DIR)/ReferenceFunctions.o \
+$(BUILD_DIR)/CubatureFunctions.o \
+$(BUILD_DIR)/TimeDiscretization.o
+
+
+# ==============================================================================
+# SEZIONE 8 — COMPILAZIONE DEGLI ESEMPI
+# ==============================================================================
+
+$(BUILD_DIR)/example_convex.o: \
+$(EXAMPLE_DIR)/example_convex.f90 \
+$(BUILD_DIR)/TypesDef.o \
+$(BUILD_DIR)/PolyhedronMesh.o \
+$(BUILD_DIR)/OPC4D_MoL.o
+
+$(BUILD_DIR)/example_concave.o: \
+$(EXAMPLE_DIR)/example_concave.f90 \
+$(BUILD_DIR)/TypesDef.o \
+$(BUILD_DIR)/PolyhedronMesh.o \
+$(BUILD_DIR)/OPC4D_MoL.o
+
+$(BUILD_DIR)/example_polynomial.o: \
+$(EXAMPLE_DIR)/example_polynomial.f90 \
+$(BUILD_DIR)/TypesDef.o \
+$(BUILD_DIR)/PolyhedronMesh.o \
+$(BUILD_DIR)/OPC4D_MoL.o
+
+$(BUILD_DIR)/example_rigidmotion.o: \
+$(EXAMPLE_DIR)/example_rigidmotion.f90 \
+$(BUILD_DIR)/TypesDef.o \
+$(BUILD_DIR)/PolyhedronMesh.o \
+$(BUILD_DIR)/OPC4D_MoL.o
+
+
+$(BUILD_DIR)/example_%.o: $(EXAMPLE_DIR)/example_%.f90
+	@echo "  Compiling  $<"
+	$(FC) $(FFLAGS) -c $< -o $@
+
+
+# ==============================================================================
+# SEZIONE 9 — LINKING
+# ==============================================================================
+
+example_convex: \
+$(MODULE_OBJECTS) \
+$(BUILD_DIR)/example_convex.o
+	@echo "  Linking    $@"
+	$(FC) $(LDFLAGS) $^ -o $@
+
+
+example_concave: \
+$(MODULE_OBJECTS) \
+$(BUILD_DIR)/example_concave.o
+	@echo "  Linking    $@"
+	$(FC) $(LDFLAGS) $^ -o $@
+
+
+example_polynomial: \
+$(MODULE_OBJECTS) \
+$(BUILD_DIR)/example_polynomial.o
+	@echo "  Linking    $@"
+	$(FC) $(LDFLAGS) $^ -o $@
+
+
+example_rigidmotion: \
+$(MODULE_OBJECTS) \
+$(BUILD_DIR)/example_rigidmotion.o
+	@echo "  Linking    $@"
+	$(FC) $(LDFLAGS) $^ -o $@
+
+
+# ==============================================================================
+# SEZIONE 10 — ESECUZIONE DEGLI ESEMPI
+# ==============================================================================
+
+convex: example_convex
+	@echo ""
+	@echo ">>> Avvio esempio CONVEX <<<"
+	@echo ""
+	cd $(EXAMPLE_DIR) && ../example_convex
+
+
+concave: example_concave
+	@echo ""
+	@echo ">>> Avvio esempio CONCAVE <<<"
+	@echo ""
+	cd $(EXAMPLE_DIR) && ../example_concave
+
+
+polynomial: example_polynomial
+	@echo ""
+	@echo ">>> Avvio esempio POLYNOMIAL <<<"
+	@echo ""
+	cd $(EXAMPLE_DIR) && ../example_polynomial
+
+
+rigidmotion: example_rigidmotion
+	@echo ""
+	@echo ">>> Avvio esempio RIGID MOTION <<<"
+	@echo ""
+	cd $(EXAMPLE_DIR) && ../example_rigidmotion
+
+
+run: examples
+	@echo ""
+	@echo ">>> Avvio esempio POLYNOMIAL <<<"
+	@echo ""
+	cd $(EXAMPLE_DIR) && ../example_polynomial
+
+
+# ==============================================================================
+# SEZIONE 11 — PULIZIA
+# ==============================================================================
+
 clean:
-	@echo "Pulizia cartelle di build..."
-	rm -rf $(OBJ_DIR) $(MOD_DIR)
-	@echo "Rimosso: $(OBJ_DIR)/ $(MOD_DIR)/"
+	@echo "Pulizia della build..."
+	rm -rf $(BUILD_DIR) $(MODULE_DIR)
+	rm -f $(TARGETS)
+
 
 distclean: clean
-	@echo "Pulizia completa (distclean)..."
-	rm -f $(EXE)
+	@echo "Pulizia completa..."
 	rm -f punti.txt *.dat *.out
 	@echo "Progetto riportato allo stato sorgente."
 
-# =====================================================================
-# SEZIONE 14 — INFO
-# =====================================================================
+
+# ==============================================================================
+# SEZIONE 12 — INFORMAZIONI
+# ==============================================================================
+
 info:
 	@echo ""
-	@echo "==============================="
-	@echo "	    mainOptimalPolyCuba4D_MoL"
-	@echo "==============================="
-	@echo " Eseguibile  : $(EXE)"
-	@echo " Compilatore : $(F90)"
-	@echo " Flag        : $(F90FLAGS)"
-	@echo " Sorgenti    : $(SRC_DIR)/"
-	@echo " Oggetti     : $(OBJ_DIR)/"
-	@echo " Moduli .mod : $(MOD_DIR)/"
-	@echo "==============================="
+	@echo "=============================================="
+	@echo "             OptimalPolyCuba4D"
+	@echo "=============================================="
 	@echo ""
+	@echo " Compilatore : $(FC)"
+	@echo " Ottimizzaz. : -O3"
+	@echo " Sorgenti    : $(SRC_DIR)/"
+	@echo " Esempi      : $(EXAMPLE_DIR)/"
+	@echo " Oggetti     : $(BUILD_DIR)/"
+	@echo " Moduli      : $(MODULE_DIR)/"
+	@echo ""
+	@echo " Esempi:"
+	@echo "   make convex"
+	@echo "   make concave"
+	@echo "   make polynomial"
+	@echo "   make rigidmotion"
+	@echo ""
+	@echo " Build completa:"
+	@echo "   make"
+	@echo ""
+	@echo " Build parallela:"
+	@echo "   make -j"
+	@echo ""
+	@echo " Pulizia:"
+	@echo "   make clean"
+	@echo "   make distclean"
+	@echo ""
+	@echo "=============================================="

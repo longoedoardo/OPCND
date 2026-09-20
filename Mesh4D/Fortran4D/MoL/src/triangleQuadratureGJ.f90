@@ -1,160 +1,80 @@
-MODULE triangleQuadratureGJ
-  USE TypesDef, ONLY: dp
+MODULE TriangleQuadratureGJ
+
+  USE TypesDef
+
   !**********************************************************************
   ! Quadratura di Gauss-Jacobi su un triangolo generico (3D), ottenuta
   ! mediante shifting affine dei punti/pesi calcolati sul triangolo di
   ! riferimento (0,0), (1,0), (0,1) tramite prodotto conico di formule
   ! 1D di Gauss-Jacobi.
   !**********************************************************************
-  IMPLICIT NONE
 
-CONTAINS
+   IMPLICIT NONE
 
-  SUBROUTINE shiftingTriangleQuadrature(V, nGP, P, W)
-    !**********************************************************************
-    IMPLICIT NONE
-    !**********************************************************************
-    ! Argument list                                                          
-    REAL(dp),    INTENT(IN)                  :: V(3,3)  ! Vertici del triangolo, per riga
-    INTEGER, INTENT(IN)                      :: nGP     ! N. punti di Gauss-Jacobi 1D
-    REAL(dp),    ALLOCATABLE, INTENT(OUT)    :: P(:,:)  ! Punti quadratura reali (n_points,3)
-    REAL(dp),    ALLOCATABLE, INTENT(OUT)    :: W(:)    ! Pesi quadratura reali (n_points)
-    !**********************************************************************
-    ! Local variables                                                        
-    INTEGER                                  :: i, n_points
-    REAL(dp)                                 :: Area
-    REAL(dp)                                 :: A(3), B(3)
-    REAL(dp), ALLOCATABLE                    :: P_std(:,:), W_std(:)   ! Punti/pesi sul triangolo di riferimento
-    !**********************************************************************
-    n_points = nGP * nGP
+   CONTAINS
 
-    ALLOCATE(P_std(2, n_points))
-    ALLOCATE(W_std(n_points))
+   SUBROUTINE TriangleQuadratureGJPoints(IntGaussP,IntGaussW,nIntGP,nGP) 
 
-    ! Punti e pesi sul triangolo di riferimento (0,0), (1,0), (0,1)
-    CALL TriangleQuadraturePoints(P_std, W_std, n_points, nGP)
+      IMPLICIT NONE
 
-    IF (ALLOCATED(P)) DEALLOCATE(P)
-    ALLOCATE(P(n_points, 3))
+      !**********************************************************************
+      ! Argomenti
+      !**********************************************************************
+      INTEGER, INTENT(IN) :: nGP
+      INTEGER, INTENT(OUT) :: nIntGP
+      REAL(dp), INTENT(OUT) :: IntGaussP(nGP*nGP, 2)
+      REAL(dp), INTENT(OUT) :: IntGaussW(nGP*nGP)
+      !**********************************************************************
+      ! Variabili locali
+      !**********************************************************************
+      INTEGER :: i, j
+      INTEGER :: iIntGP
 
-    IF (ALLOCATED(W)) DEALLOCATE(W)
-    ALLOCATE(W(n_points))
+      REAL(dp) :: tol
+      REAL(dp) :: mu1(nGP)
+      REAL(dp) :: mu2(nGP)
+      REAL(dp) :: A1(nGP)
+      REAL(dp) :: A2(nGP)
+      tol = 1.0 / (10.0**(PRECISION(1.0)-2) )                                   
+      !**********************************************************************
 
-    ! Lati del triangolo reale a partire dal primo vertice
-    A = V(2,:) - V(1,:)
-    B = V(3,:) - V(1,:)
+      nIntGP = nGP*nGP
 
-    ! Shifting affine dei punti dal triangolo di riferimento a quello reale.
-    ! NB: P_std ha shape (2, n_points) -> coordinata (riga), punto (colonna)
-    DO i = 1, n_points
-       P(i,:) = V(1,:) + P_std(1,i)*A + P_std(2,i)*B
-    END DO
+      ! Calcolo dei punti e dei pesi di Gauss-Jacobi
+      CALL gaujac(mu1, A1, nGP, 1.0_dp, 0.0_dp)
+      CALL gaujac(mu2, A2, nGP, 0.0_dp, 0.0_dp)
 
-    ! Area del triangolo reale: metà del modulo del prodotto vettoriale A x B
-    Area = 0.5 * SQRT( (A(2)*B(3) - A(3)*B(2))**2 &
-                      + (A(3)*B(1) - A(1)*B(3))**2 &
-                      + (A(1)*B(2) - A(2)*B(1))**2 )
+      ! Trasformazione nell'intervallo [0,1]
+      mu1(:) = 0.5_dp * mu1(:) + 0.5_dp
+      A1(:)  = 0.5_dp**2 * A1(:)
 
-    ! I pesi standard sommano a 0.5 (area del triangolo di riferimento):
-    ! si riscalano quindi con il rapporto Area / 0.5 = 2 * Area
-    W = 2.0 * Area * W_std
+      mu2(:) = 0.5_dp * mu2(:) + 0.5_dp
+      A2(:)  = 0.5_dp * A2(:)
 
-    DEALLOCATE(P_std, W_std)
+      ! Costruzione della quadratura sul triangolo di riferimento
+      iIntGP = 1
+      DO i = 1, nGP
+         DO j = 1, nGP
+            IntGaussP(iIntGP,1) = mu1(i)
+            IntGaussP(iIntGP,2) = mu2(j) * (1.0_dp - mu1(i))
+            IntGaussW(iIntGP) = A1(i) * A2(j)
+            iIntGP = iIntGP + 1
+         END DO
+      END DO
 
-  END SUBROUTINE shiftingTriangleQuadrature
+      !**********************************************************************
+      ! Controllo della somma dei pesi
+      !**********************************************************************
 
+      IF (ABS(SUM(IntGaussW) - 0.5_dp) > tol) THEN
 
-  SUBROUTINE TriangleQuadraturePoints(IntGaussP,IntGaussW,nIntGP,nGP) 
-    !**********************************************************************
-    IMPLICIT NONE
-    !**********************************************************************
-    ! Argument list declaration                                               
-    INTEGER                            :: nIntGP         ! Number of 2D integration points 
-    REAL(dp)                           :: IntGaussP(2,nGP*nGP) ! Positions of 2D int. points 
-    REAL(dp)                           :: IntGaussW(nGP*nGP)   ! Weights of 2D int. points  
-    INTEGER                            :: nGP            ! Number of 1D Gausspoints        
-    !**********************************************************************
-    ! Local variable declaration                                              
-    INTEGER                :: i,j                  ! Loop counters                   
-    INTEGER                :: iIntGP               ! Loop counter                    
-    REAL(dp)               :: tol                  ! Tolerance of 0.0                
-    REAL(dp)               :: mu1(nGP)             ! 1D quadrature positions in y1   
-    REAL(dp)               :: mu2(nGP)             ! 1D quadrature positions in y2   
-    REAL(dp)               :: A1(nGP)              ! 1D quadrature weights for y1    
-    REAL(dp)               :: A2(nGP)              ! 1D quadrature weights for y2    
-    !**********************************************************************
-    INTENT(IN)             :: nGP 
-    INTENT(OUT)            :: IntGaussP, IntGaussW 
-    !**********************************************************************
-    tol = 1.0 / (10.0**(PRECISION(1.0)-2) )                                   
-    !**********************************************************************                                                                         
-    ! Quadrature points are defined by the conical product of 1D Gauss-Jacobi 
-    ! formulas with nGP quadrature points. See Stround, p. 28ff for details.
-    ! **********************************************************************
-    nIntGP = nGP*nGP 
-    ! 
-    CALL gaujac(mu1,A1,nGP,1.0_dp,0.0_dp)     ! Get the Gauss-Jacobi positions and weights
-    CALL gaujac(mu2,A2,nGP,0.0_dp,0.0_dp)     ! Get the Gauss-Jacobi positions and weights
-    !
-    mu1(:) = 0.5*mu1(:) + 0.5       ! Shift and rescale positions, because Stroud
-    A1(:)  = 0.5**2*A1(:)           ! integrates over the interval [0,1] and
-    mu2(:) = 0.5*mu2(:) + 0.5       ! the function gaujac of the num. recipes
-    A2(:)  = 0.5**1*A2(:)           ! integrates over the interval [-1,1].
-    !
-    iIntGP = 1
-    DO i = 1, nGP 
-       DO j = 1, nGP
-          intGaussP(1,iIntGP) = mu1(i)
-          intGaussP(2,iIntGP) = mu2(j)*(1.-mu1(i))
-          intGaussW(iIntGP)   = A1(i)*A2(j)      
-          iIntGP              = iIntGP + 1
-       ENDDO
-    ENDDO
-    !
-    IF (     ((ABS(SUM(intGaussW(:)))-0.5).GT.tol)  ) THEN
-       WRITE(*,*) '| Integration points calculated with conical product.'
-       WRITE(*,*) '| Number of integration points is  ', nIntGP
-       WRITE(*,*) '| SUM of Weights is ', SUM(intGaussW(:)), ' and must be 0.5! '
-    END IF
-    ! 
-  END SUBROUTINE TriangleQuadraturePoints
+         WRITE(*,*) '| Integration points calculated with conical product.'
+         WRITE(*,*) '| Number of integration points is ', nIntGP
+         WRITE(*,*) '| SUM of Weights is ', SUM(IntGaussW),' and must be 0.5!'
+      END IF
 
+   END SUBROUTINE TriangleQuadratureGJPoints
 
-  PURE ELEMENTAL FUNCTION gammln(xx)
-  !**********************************************************************
-  IMPLICIT NONE
-  !**********************************************************************
-  REAL(dp)             :: gammln,xx
-  INTEGER          :: j
-  REAL(dp)             :: ser,stp,tmp,x,y,cof(6)
-  PARAMETER(stp=  2.5066282746310005  )
-  PARAMETER(cof= (/           &
-       76.18009172947146    , &
-       -86.50532032941677   , &
-       24.01409824083091    , &
-       -1.231739572450155   , &
-       .1208650973866179e-2 , &
-       -.5395239384953e-5    /)       )
-  !**********************************************************************
-  INTENT(IN) :: xx
-  !**********************************************************************
-
-  x   = xx
-  y   = x
-  tmp = x+5.5d0
-  tmp = (x+0.5d0)*LOG(tmp)-tmp
-  ser = 1.000000000190015d0
-
-  DO  j=1,6
-     y  = y+1.d0
-     ser= ser+cof(j)/y
-  END DO
-
-  gammln=tmp+LOG(stp*ser/x)
-
-  RETURN
-
-END FUNCTION gammln
 
 PURE SUBROUTINE gauleg(x1,x2,x,w,n)
   !**********************************************************************
@@ -200,16 +120,15 @@ END SUBROUTINE gauleg
 
 SUBROUTINE gaujac(x,w,n,alf,bet)
   !**********************************************************************
-  INTEGER ::  n,MAXIT
-  REAL(dp)    ::  alf,bet,w(n),x(n)
+  INTEGER ::  MAXIT
+  INTEGER, INTENT(IN) :: n
+   REAL(dp), INTENT(IN) :: alf, bet
+   REAL(dp), INTENT(OUT) :: x(n), w(n)
   REAL(dp)    :: EPS
   INTEGER :: i,its,j,pr
   REAL(dp)    :: alfbet,an,bn,r1,r2,r3
   REAL(dp)    :: a,b,c,p1,p2,p3,pp,temp,z,z1
   REAL(dp)    :: test
-  !**********************************************************************
-  INTENT(IN)  :: n, alf, bet
-  INTENT(OUT) :: x,w
   !**********************************************************************
   test = 1. 
   MAXIT=50
@@ -243,7 +162,7 @@ SUBROUTINE gaujac(x,w,n,alf,bet)
         r3=1./(1.+8.*alf/((6.28+alf)*n*n))
         z=z+(z-x(n-2))*r1*r2*r3
      ELSE
-        z=3.*x(i-1)-3.*x(i-2)+x(i-3)
+        z=3.*x(MAX(i-1,1))-3.*x(MAX(i-2,1))+x(MAX(i-3,1))
      ENDIF
      alfbet=alf+bet
      DO its=1,MAXIT
@@ -267,9 +186,9 @@ SUBROUTINE gaujac(x,w,n,alf,bet)
 
      stop 'too many iterations in gaujac'
 1    x(i)=z
-     w(i)=EXP(gammln(alf+n)+gammln(bet+n)-gammln(n+1.0_dp)-gammln(n+alfbet+1.0_dp))*temp*2.0_dp**alfbet/(pp*p2)
+     w(i)=EXP(LOG_GAMMA(alf+n)+LOG_GAMMA(bet+n)-LOG_GAMMA(n+1.0_dp)-LOG_GAMMA(n+alfbet+1.0_dp))*temp*2.0_dp**alfbet/(pp*p2)
   END DO
   RETURN
 END SUBROUTINE gaujac
 
-END MODULE triangleQuadratureGJ
+END MODULE TriangleQuadratureGJ

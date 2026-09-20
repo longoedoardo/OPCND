@@ -1,73 +1,100 @@
 MODULE PolyhedronMesh
-    USE TypesDef
-    IMPLICIT NONE
 
-    ! Definizione della struttura
-    TYPE :: t_polyhedron
-        REAL, ALLOCATABLE    :: vertici(:,:)      ! Vertici a tau = 0, dimensione n_vertici x 3
-        REAL, ALLOCATABLE    :: vertici_new(:,:)  ! Vertici a tau = 1, dimensione n_vertici x 3
-        INTEGER, ALLOCATABLE :: facce(:,:)        ! Facce triangolari, dimensione n_facce x 3
-    END TYPE t_polyhedron
+   USE TypesDef
+
+   IMPLICIT NONE
+
+   TYPE :: t_polyhedron
+      REAL(dp), ALLOCATABLE :: vertici(:,:)
+      REAL(dp), ALLOCATABLE :: vertici_new(:,:)
+      INTEGER, ALLOCATABLE  :: facce(:,:)
+   END TYPE t_polyhedron
 
 CONTAINS
 
-    SUBROUTINE MeshReader(vertici_file, vertici_new_file, tri_file, poly)
-        CHARACTER(LEN=*), INTENT(IN)    :: vertici_file
-        CHARACTER(LEN=*), INTENT(IN)    :: vertici_new_file
-        CHARACTER(LEN=*), INTENT(IN)    :: tri_file
-        TYPE(t_polyhedron), INTENT(OUT) :: poly
+   SUBROUTINE MeshReader(vertices_file, vertices_new_file, facets_file, poly)
+      CHARACTER(LEN=*), INTENT(IN)     :: vertices_file
+      CHARACTER(LEN=*), INTENT(IN)     :: vertices_new_file
+      CHARACTER(LEN=*), INTENT(IN)     :: facets_file
+      TYPE(t_polyhedron), INTENT(OUT)  :: poly
 
-        INTEGER :: u_vert, u_vert_new, u_tri
-        INTEGER :: ierr
-        INTEGER :: n_vertici, n_vertici_new, n_facce
-        INTEGER :: i, j
+      CALL read_real_matrix_3(vertices_file, poly%vertici)
+      CALL read_real_matrix_3(vertices_new_file, poly%vertici_new)
+      CALL read_integer_matrix_3(facets_file, poly%facce)
 
-        ! Lettura dei vertici iniziali
-        OPEN(NEWUNIT=u_vert, FILE=vertici_file, STATUS='OLD', ACTION='READ', IOSTAT=ierr)
-        IF (ierr /= 0) STOP "ERRORE: Impossibile aprire il file dei vertici iniziali."
+      IF (SIZE(poly%vertici, 1) /= SIZE(poly%vertici_new, 1)) THEN
+         ERROR STOP 'ERRORE: il numero di vertici iniziali e finali non coincide.'
+      END IF
+   END SUBROUTINE MeshReader
 
-        READ(u_vert, *, IOSTAT=ierr) n_vertici
-        IF (ierr /= 0) STOP "ERRORE: Impossibile leggere il numero dei vertici iniziali."
+   SUBROUTINE read_real_matrix_3(filename, a)
+      CHARACTER(LEN=*), INTENT(IN)        :: filename
+      REAL(dp), ALLOCATABLE, INTENT(OUT)  :: a(:,:)
 
-        ALLOCATE(poly%vertici(n_vertici, 3))
+      INTEGER                             :: unit
+      INTEGER                             :: ios
+      INTEGER                             :: n
+      INTEGER                             :: i
+      REAL(dp)                            :: tmp(3)
 
-        READ(u_vert, *, IOSTAT=ierr) ((poly%vertici(i, j), j = 1, 3), i = 1, n_vertici)
-        IF (ierr /= 0) STOP "ERRORE: Impossibile leggere i vertici iniziali."
+      n = count_rows(filename)
+      ALLOCATE(a(n, 3))
 
-        CLOSE(u_vert)
+      OPEN(NEWUNIT=unit, FILE=filename, STATUS='OLD', ACTION='READ', IOSTAT=ios)
+      IF (ios /= 0) ERROR STOP 'ERRORE: impossibile aprire un file di vertici.'
 
-        ! Lettura dei vertici finali
-        OPEN(NEWUNIT=u_vert_new, FILE=vertici_new_file, STATUS='OLD', ACTION='READ', IOSTAT=ierr)
-        IF (ierr /= 0) STOP "ERRORE: Impossibile aprire il file dei vertici finali."
+      DO i = 1, n
+         READ(unit, *, IOSTAT=ios) tmp
+         IF (ios /= 0) ERROR STOP 'ERRORE: impossibile leggere un file di vertici.'
+         a(i,:) = tmp
+      END DO
 
-        READ(u_vert_new, *, IOSTAT=ierr) n_vertici_new
-        IF (ierr /= 0) STOP "ERRORE: Impossibile leggere il numero dei vertici finali."
+      CLOSE(unit)
+   END SUBROUTINE read_real_matrix_3
 
-        IF (n_vertici_new /= n_vertici) THEN
-            STOP "ERRORE: Il numero di vertici iniziali e finali non coincide."
-        END IF
+   SUBROUTINE read_integer_matrix_3(filename, a)
+      CHARACTER(LEN=*), INTENT(IN)       :: filename
+      INTEGER, ALLOCATABLE, INTENT(OUT)  :: a(:,:)
 
-        ALLOCATE(poly%vertici_new(n_vertici, 3))
+      INTEGER                            :: unit
+      INTEGER                            :: ios
+      INTEGER                            :: n
+      INTEGER                            :: i
+      INTEGER                            :: tmp(3)
 
-        READ(u_vert_new, *, IOSTAT=ierr) ((poly%vertici_new(i, j), j = 1, 3), i = 1, n_vertici)
-        IF (ierr /= 0) STOP "ERRORE: Impossibile leggere i vertici finali."
+      n = count_rows(filename)
+      ALLOCATE(a(n, 3))
 
-        CLOSE(u_vert_new)
+      OPEN(NEWUNIT=unit, FILE=filename, STATUS='OLD', ACTION='READ', IOSTAT=ios)
+      IF (ios /= 0) ERROR STOP 'ERRORE: impossibile aprire un file di facce.'
 
-        ! Lettura delle facce triangolari
-        OPEN(NEWUNIT=u_tri, FILE=tri_file, STATUS='OLD', ACTION='READ', IOSTAT=ierr)
-        IF (ierr /= 0) STOP "ERRORE: Impossibile aprire il file delle facce."
+      DO i = 1, n
+         READ(unit, *, IOSTAT=ios) tmp
+         IF (ios /= 0) ERROR STOP 'ERRORE: impossibile leggere un file di facce.'
+         a(i,:) = tmp
+      END DO
 
-        READ(u_tri, *, IOSTAT=ierr) n_facce
-        IF (ierr /= 0) STOP "ERRORE: Impossibile leggere il numero delle facce."
+      CLOSE(unit)
+   END SUBROUTINE read_integer_matrix_3
 
-        ALLOCATE(poly%facce(n_facce, 3))
+   INTEGER FUNCTION count_rows(filename) RESULT(n)
+      CHARACTER(LEN=*), INTENT(IN) :: filename
 
-        READ(u_tri, *, IOSTAT=ierr) ((poly%facce(i, j), j = 1, 3), i = 1, n_facce)
-        IF (ierr /= 0) STOP "ERRORE: Impossibile leggere le facce."
+      INTEGER                      :: unit
+      INTEGER                      :: ios
+      CHARACTER(LEN=1024)          :: line
 
-        CLOSE(u_tri)
+      n = 0
+      OPEN(NEWUNIT=unit, FILE=filename, STATUS='OLD', ACTION='READ', IOSTAT=ios)
+      IF (ios /= 0) ERROR STOP 'ERRORE: impossibile aprire un file mesh.'
 
-    END SUBROUTINE MeshReader
+      DO
+         READ(unit, '(A)', IOSTAT=ios) line
+         IF (ios /= 0) EXIT
+         IF (LEN_TRIM(line) > 0) n = n + 1
+      END DO
+
+      CLOSE(unit)
+   END FUNCTION count_rows
 
 END MODULE PolyhedronMesh
