@@ -18,8 +18,8 @@ PROGRAM example_convex
    REAL(dp)                           :: elapsed
    REAL(dp)                           :: integral
 
-   ade = 1
-   n_tau = 10
+   ade = 10
+   n_tau = 100
 
    WRITE(*,'(/,A)') '**************************************************************'
    WRITE(*,'(A)')   '                 OPTIMALPOLYCUBA4D'

@@ -1,15 +1,78 @@
 MODULE OPC4D_MoL_Module
 
    USE TypesDef
-   USE ReferenceFunctions
-   USE CubatureFunctions
-   USE TimeDiscretization
 
    IMPLICIT NONE
 
 CONTAINS
 
-   SUBROUTINE OPC4D_MoL(ade, n_tau, vertices_initial, vertices_final, facets, method, XYZtau, W)
+   SUBROUTINE OPC4D_MoL(ade, n_tau, vertices_initial, vertices_final, facets, method, XYZT, W)
+
+      USE ReferenceFunctions
+      USE CubatureFunctions
+      USE TimeDiscretization
+
+
+      !***********************************************************************
+      !
+      ! SUBROUTINE OPC4D_MoL(ade, vertices, facets, method, XYZ, W)
+      !
+      ! Calcola un'approssimazione numerica di un integrale di volume
+      ! quadridimensionale su un dominio poliedrico rappresentato mediante
+      ! una mesh superficiale triangolare chiusa e orientata mobile.
+      !
+      ! Il metodo non richiede una decomposizione volumetrica del dominio
+      ! mediante tetraedri e utilizza esclusivamente la triangolazione della
+      ! superficie del poliedro.
+      !
+      !***********************************************************************
+      !
+      ! INPUTS:
+      !
+      !   - ade:
+      !       Grado polinomiale totale massimo della regola di cubatura.
+      !       Il numero di momenti utilizzati è N_mom = (ade+1)(ade+2)(ade+3)/6.
+      !
+      !   - vertices:
+      !       Matrice N x 3 contenente le coordinate cartesiane dei vertici
+      !       della mesh superficiale. Ogni riga rappresenta un vertice
+      !       [x_i, y_i, z_i].
+      !
+      !   - facets:
+      !       Matrice M x 3 contenente la connettività della mesh superficiale
+      !       triangolare. Ogni riga contiene gli indici dei tre vertici che
+      !       definiscono una faccia triangolare. Le facce devono rappresentare 
+      !       una superficie chiusa e orientata coerentemente, in modo che le 
+      !       normali associate risultino compatibili con l'orientazione del 
+      !       bordo del dominio.
+      !
+      !   - method:
+      !       Metodo utilizzato per la quadratura delle facce triangolari.
+      !       'D' : quadratura di Dunavant. Disponibile fino al grado 20.
+      !       'G' : quadratura di Gauss-Jacobi sul triangolo di riferimento.
+      !
+      !***********************************************************************
+      !
+      ! OUTPUTS:
+      !
+      !   - XYZT:
+      !       Matrice N x 4 contenente le coordinate cartesiane dei nodi
+      !       di cubatura nel dominio fisico. Ogni riga rappresenta un nodo
+      !       [x_k, y_k, z_k, tau].
+      !
+      !   - W:
+      !       Vettore N x 1 contenente i pesi associati ai nodi di cubatura.
+      !
+      !***********************************************************************
+      !
+      !   Autore:
+      !       Edoardo Longo, Università degli Studi di Verona
+      !
+      !   Data:
+      !       Settembre 2026
+      !
+      !***********************************************************************
+
 
       IMPLICIT NONE
 
@@ -19,7 +82,7 @@ CONTAINS
       REAL(dp), INTENT(IN)                        :: vertices_final(:,:)
       INTEGER, INTENT(IN)                         :: facets(:,:)
       CHARACTER(LEN=*), INTENT(IN)                :: method
-      REAL(dp), ALLOCATABLE, INTENT(OUT)          :: XYZtau(:,:)
+      REAL(dp), ALLOCATABLE, INTENT(OUT)          :: XYZT(:,:)
       REAL(dp), ALLOCATABLE, INTENT(OUT)          :: W(:)
 
       INTEGER                                     :: n_spaz
@@ -75,9 +138,9 @@ CONTAINS
       ALLOCATE(alpha(n_mom))
       ALLOCATE(w_spatial(n_spaz))
 
-      IF (ALLOCATED(XYZtau)) DEALLOCATE(XYZtau)
+      IF (ALLOCATED(XYZT)) DEALLOCATE(XYZT)
       IF (ALLOCATED(W)) DEALLOCATE(W)
-      ALLOCATE(XYZtau(n_spaz * n_tau, 4))
+      ALLOCATE(XYZT(n_spaz * n_tau, 4))
       ALLOCATE(W(n_spaz * n_tau))
 
       DO k = 1, n_tau
@@ -100,8 +163,8 @@ CONTAINS
          first = (k - 1) * n_spaz + 1
          last = k * n_spaz
 
-         XYZtau(first:last, 1:3) = xyzw_tens(:, 1:3)
-         XYZtau(first:last, 4) = tau
+         XYZT(first:last, 1:3) = xyzw_tens(:, 1:3)
+         XYZT(first:last, 4) = tau
          W(first:last) = tau_weights(k) * w_spatial
       END DO
 

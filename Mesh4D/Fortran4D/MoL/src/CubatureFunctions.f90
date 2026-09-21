@@ -138,14 +138,6 @@ MODULE CubatureFunctions
       ! Per ciascuna faccia viene calcolata la normale esterna unitaria e il relativo
       ! contributo ai momenti. I contributi ottenuti da tutte le facce vengono infine
       ! sommati per ottenere i momenti del poliedro.
-      !
-      ! Si assume che:
-      !
-      !   - vertices contenga le coordinate dei vertici della mesh;
-      !   - facets contenga la connettivita' triangolare della superficie;
-      !   - le facce siano orientate coerentemente;
-      !   - l'orientamento delle facce sia compatibile con le normali esterne;
-      !   - la superficie triangolare sia chiusa.
       !*******************************************************************************
 
       USE TriangleQuadratureGJ
