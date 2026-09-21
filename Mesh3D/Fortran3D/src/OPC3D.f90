@@ -76,18 +76,18 @@ IMPLICIT NONE
 !**********************************************************************
 ! Argomenti
 !**********************************************************************
-INTEGER,                                    INTENT(IN)  :: ade
-CHARACTER(LEN=*),                           INTENT(IN)  :: method
-REAL(dp),                                   INTENT(IN)  :: vertices(:,:)
-INTEGER,                                    INTENT(IN)  :: facets(:,:)
-REAL(dp), ALLOCATABLE,                      INTENT(OUT) :: XYZ(:,:)
-REAL(dp), ALLOCATABLE,                      INTENT(OUT) :: W(:)
+INTEGER, INTENT(IN)                                     :: ade
+CHARACTER(LEN=*), INTENT(IN)                            :: method
+REAL(dp), INTENT(IN)                                    :: vertices(:,:)
+INTEGER, INTENT(IN)                                     :: facets(:,:)
+REAL(dp), ALLOCATABLE, INTENT(OUT)                      :: XYZ(:,:)
+REAL(dp), ALLOCATABLE, INTENT(OUT)                      :: W(:)
 !**********************************************************************
 ! Variabili locali
 !**********************************************************************
-INTEGER :: N, N_mom
-INTEGER :: k
-INTEGER :: ind_curr(3)
+INTEGER                                                 :: N, N_mom
+INTEGER                                                 :: k
+INTEGER                                                 :: ind_curr(3)
 REAL(dp), ALLOCATABLE                                   :: XYZW_tens_ref(:,:)
 REAL(dp), ALLOCATABLE                                   :: X(:,:)
 REAL(dp), ALLOCATABLE                                   :: XYZW_tens(:,:)
