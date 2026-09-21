@@ -53,8 +53,8 @@ PROGRAM example_convex
     WRITE(*,'(A,I0)') 'Ade:                   ', ade
 
     ! Percorsi relativi alla cartella examples.
-    vertici_file = 'concave_vertex.dat'
-    tri_file     = 'concave_tri.dat'
+    vertici_file = 'convex_vertex.dat'
+    tri_file     = 'convex_tri.dat'
 
     ! Lettura della mesh superficiale triangolare.
     CALL MeshReader(vertici_file, tri_file, poly)

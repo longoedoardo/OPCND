@@ -64,60 +64,6 @@ MODULE CubatureFunctions
 
    END SUBROUTINE triangle_quadrature
 
-   SUBROUTINE shiftingTriangleQuadrature(V, nodes_ref, weights_ref, nodes, weights)
-
-      IMPLICIT NONE
-
-      !*******************************************************************************
-      ! Argomenti
-      !*******************************************************************************
-      REAL(dp), INTENT(IN) :: V(3,3)
-      REAL(dp), INTENT(IN) :: nodes_ref(:,:)
-      REAL(dp), INTENT(IN) :: weights_ref(:)
-      REAL(dp), ALLOCATABLE, INTENT(OUT) :: nodes(:,:)
-      REAL(dp), ALLOCATABLE, INTENT(OUT) :: weights(:)
-      !*******************************************************************************
-      ! Variabili locali
-      !*******************************************************************************
-      INTEGER :: i
-      INTEGER :: n_points
-
-      REAL(dp) :: A(3)
-      REAL(dp) :: B(3)
-      REAL(dp) :: cross_product(3)
-      REAL(dp) :: area
-      !*******************************************************************************
-
-      n_points = SIZE(weights_ref)
-
-      IF (ALLOCATED(nodes)) DEALLOCATE(nodes)
-      ALLOCATE(nodes(n_points,3))
-
-      IF (ALLOCATED(weights)) DEALLOCATE(weights)
-      ALLOCATE(weights(n_points))
-
-      ! Lati del triangolo reale a partire dal primo vertice
-      A = V(2,:) - V(1,:)
-      B = V(3,:) - V(1,:)
-
-      ! Trasformazione affine dei punti dal triangolo di riferimento
-      ! al triangolo fisico x = V1 + xi * (V2-V1) + eta * (V3-V1)
-      DO i = 1, n_points
-         nodes(i,:) = V(1,:) + nodes_ref(i,1) * A + nodes_ref(i,2) * B
-
-      END DO
-
-      ! Area del triangolo fisico
-      cross_product(1) = A(2)*B(3) - A(3)*B(2)
-      cross_product(2) = A(3)*B(1) - A(1)*B(3)
-      cross_product(3) = A(1)*B(2) - A(2)*B(1)
-
-      area = 0.5_dp * SQRT(SUM(cross_product**2))
-
-      weights = area * weights_ref
-
-   END SUBROUTINE shiftingTriangleQuadrature
-
    
    SUBROUTINE chebyshev_moments_polyhedron(vertices, facets, ade, chebyshev_indices, dbox, method, moments)
 
