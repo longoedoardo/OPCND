@@ -53,7 +53,6 @@ tau = kron(x, ones(n^3,1));
 % Peso tensoriale costante
 w4 = (pi / n)^4;
 
-% Costruzione dell'output
 XYZTW = zeros(N4, 5);
 
 XYZTW(:,1) = X;

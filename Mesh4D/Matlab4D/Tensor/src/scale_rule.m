@@ -12,20 +12,10 @@ function XYZW_tens = scale_rule(XYZTW_tens_ref, dbox)
 %
 %   XYZW_tens_ref:
 %               Matrice Nq x 4 oppure Nq x 5 contenente i nodi della
-%               regola di quadratura nel dominio di riferimento.
-%
-%               Le prime quattro colonne contengono le coordinate
-%
-%                   [x, y, z, tau]
-%
-%               nell'ipercubo [-1,1]^4. Se presente, la quinta colonna
-%               contiene il peso associato a ciascun nodo.
+%               regola di quadratura nel dominio di riferimento
 %
 %   dbox:
-%               Bounding box 4D, formato 2 x 4:
-%
-%                   dbox(1,:) = [xmin ymin zmin taumin]
-%                   dbox(2,:) = [xmax ymax zmax taumax]
+%               Bounding box 4D
 %
 %**************************************************************************
 %

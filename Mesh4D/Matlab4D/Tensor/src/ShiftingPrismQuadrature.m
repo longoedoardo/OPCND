@@ -89,7 +89,7 @@ function [XYZTW, WV_X] = ShiftingPrismQuadrature(V, XI_ref, ETA_ref, T_ref, W_re
 % Le due facce triangolari sono le sezioni del prisma per tau = 0 e tau = 1
 % Esse rappresentano la stessa faccia osservata nelle due configurazioni
 % estreme del modo. La parametrizzazione spazio-temporale verra' costruita
-% collegando punti corrispondenti delle due facce. 
+% collegando punti corrispondenti delle due facce
 
 % Vertici della faccia triangolare al tempo iniziale tau = 0
 
@@ -113,7 +113,7 @@ C1 = V(6, :);
 %       e_2^1 = C_1 - A_1,
 %
 % Questi vettori costituiscono le due direzioni tangenti associate alle
-% coordinate locali xi ed eta.
+% coordinate locali xi ed eta
 
 % Vettori lato della faccia iniziale
 lato1_base = B0 - A0;
@@ -132,11 +132,11 @@ lato2_top = C1 - A1;
 %
 %       X_0(xi,eta) = A_0 + xi (B_0-A_0) + eta (C_0-A_0).
 %
-% Per xi = 0, eta = 0 si ottiene A_0.
+% Per xi = 0, eta = 0 si ottiene A_0
 %
-% Per xi = 1, eta = 0 si ottiene B_0.
+% Per xi = 1, eta = 0 si ottiene B_0
 %
-% Per xi = 0, eta = 1 si ottiene C_0.
+% Per xi = 0, eta = 1 si ottiene C_0
 %
 % Questa e' l'analoga 4D della parametrizzazione affine di un triangolo
 % utilizzata nella funzione mapTrianglePoints nella versione 3D
@@ -151,7 +151,7 @@ nodi_base_4D = A0 + XI_ref * lato1_base + ETA_ref * lato2_base;
 %
 % La stessa coppia (xi,eta) identifica quindi due punti corrispondenti: 
 % X_0(xi,eta) e X_1(xi,eta). Questi due punti verranno successivamente 
-% collegati lungo la direzione temporale.
+% collegati lungo la direzione temporale
 
 % Nodi sulla faccia finale X1(xi,eta)
 nodi_top_4D  = A1 + XI_ref * lato1_top  + ETA_ref * lato2_top;
@@ -164,23 +164,23 @@ nodi_top_4D  = A1 + XI_ref * lato1_top  + ETA_ref * lato2_top;
 % Questa formula puo' essere interpretata come un prodotto tensoriale
 % geometrico tra:
 %   
-%   - la parametrizzazione triangolare nelle variabili xi, eta;
-%   - la base lineare {1-tau, tau} nella variabile temporale.
+%   - la parametrizzazione triangolare nelle variabili xi, eta
+%   - la base lineare {1-tau, tau} nella variabile temporale
 %
 % Infatti
 %
 %       X(xi,eta,tau) = (1-tau) X_0(xi,eta) + tau X_1(xi,eta)
 %
-% e' precisamente l'interpolazione lineare di X_0 e X_1 lungo tau.
+% e' precisamente l'interpolazione lineare di X_0 e X_1 lungo tau
 %
 % Per tau = 0 otteniamo X(xi,eta,0) = X_0(xi,eta), mentre per tau = 1 si 
 % ottiene X(xi,eta,1) = X_1(xi,eta).
 %
 % In questo modo il triangolo iniziale e quello finale vengono collegati
-% generando una iperfaccia tridimensionale in R^4.
+% generando una iperfaccia tridimensionale in R^4
 %
 % L'operazione e' completamente vettorializzata rispetto ai Nq nodi
-% della quadratura.
+% della quadratura
 
 XYZTW = (1.0 - T_ref) .* nodi_base_4D + T_ref .* nodi_top_4D;
 
@@ -205,7 +205,7 @@ XYZTW = (1.0 - T_ref) .* nodi_base_4D + T_ref .* nodi_top_4D;
 %       dX_1/deta = C_1-A_1,
 %
 % i due vettori tangenti sono semplicemente interpolazioni lineari dei
-% corrispondenti lati iniziale e finale.
+% corrispondenti lati iniziale e finale
 
 % Vettori tangenti rispetto a xi, eta
 dXYZTW_dxi  = (1.0 - T_ref) .* lato1_base + T_ref .* lato1_top;
@@ -218,19 +218,19 @@ dXYZTW_deta = (1.0 - T_ref) .* lato2_base + T_ref .* lato2_top;
 %
 % rispetto a tau si ottiene
 %
-%       dX/dtau = X_1(xi,eta) - X_0(xi,eta).
+%       dX/dtau = X_1(xi,eta) - X_0(xi,eta)
 %
 % A differenza dei due vettori precedenti, questo vettore dipende
-% esplicitamente da xi ed eta attraverso X_0 e X_1.
+% esplicitamente da xi ed eta attraverso X_0 e X_1
 %
 % Geometricamente rappresenta la direzione di moto del punto della
-% superficie identificato dalla coppia (xi,eta).
+% superficie identificato dalla coppia (xi,eta)
 %
 % Se tutti i punti si muovessero con la stessa traslazione, questo
-% vettore sarebbe costante.
+% vettore sarebbe costante
 %
 % In presenza di rotazione, deformazione o moto non uniforme, esso
-% dipende invece dalla posizione sul triangolo.
+% dipende invece dalla posizione sul triangolo
 
 % Vettore tangente rispetto al tempo
 dXYZTW_dt   = nodi_top_4D - nodi_base_4D;

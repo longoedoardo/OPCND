@@ -46,7 +46,6 @@ num_moments = size(chebyshev_indices, 1);
 % Trasformazione affine dal dominio fisico al dominio di riferimento [-1,1]^4
 X_ref = (2.0 * XYZTW - (dbox(1,:) + dbox(2,:))) ./ (dbox(2,:) - dbox(1,:));
 
-
 % Ogni riga di chebyshev_indices identifica un elemento della base T_i(x)
 % T_j(y) T_k(z) T_l(tau). Per costruire le matrici dei polinomi e'
 % sufficiente conoscere il massimo grado richiesto separatamente in
@@ -72,18 +71,17 @@ idx_l = chebyshev_indices(:,4) + 1;
 %
 % La direzione x richiede un grado aggiuntivo. Per la componente x del 
 % campo vettoriale occorre una primitiva di T_i(x). La formula della 
-% primitiva per i >= 2 contiene infatti il polinomio T_(i+1)(x). 
+% primitiva per i >= 2 contiene infatti il polinomio T_(i+1)(x)
 % Di conseguenza, per costruire la primitiva del termine di grado massimo 
-% T_max_i e' necessario conoscere anche T_(max_i+1).
+% T_max_i e' necessario conoscere anche T_(max_i+1)
 % Nelle altre tre direzioni non e' necessaria alcuna primitiva e quindi
-% e' sufficiente arrivare al grado massimo richiesto.
+% e' sufficiente arrivare al grado massimo richiesto
 
 x  = X_ref(:,1);
 TX = chebpolys(max_i + 1, x);
 TY = chebpolys(max_j, X_ref(:,2));
 TZ = chebpolys(max_k, X_ref(:,3));
 TT = chebpolys(max_l, X_ref(:,4));
-
 
 PhiX = zeros(num_pts, num_moments);
 
@@ -108,14 +106,15 @@ end
 % multi-indice si costruisce Phi_x = [int T_i(x) dx] T_j(y) T_k(z) T_l(tau).
 % Il vettore WV_CUB contiene gia' il peso della quadratura e il fattore
 % geometrico orientato n_x dS. Il prodotto elemento per elemento con
-% PhiX restituisce l'integrando della formula di superficie.
+% PhiX restituisce l'integrando della formula di superficie
+
 P = PhiX .* WV_CUB(:);
 P = P .* TY(:,idx_j);
 P = P .* TZ(:,idx_k);
 P = P .* TT(:,idx_l);
 
 % La trasformazione dalla coordinata fisica x alla coordinata di
-% riferimento xi introduce il fattore dx = (xmax - xmin)/2 dxi.
+% riferimento xi introduce il fattore dx = (xmax - xmin)/2 dxi
 
 B1 = 0.5 * (dbox(2,1) - dbox(1,1));
 

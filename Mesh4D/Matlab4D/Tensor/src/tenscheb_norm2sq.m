@@ -1,4 +1,5 @@
 function coeffs = tenscheb_norm2sq(chebyshev_indices)
+
 %**************************************************************************
 %
 % function coeffs = tenscheb_norm2sq(chebyshev_indices)

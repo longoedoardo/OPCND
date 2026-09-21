@@ -178,7 +178,6 @@ vertici_4D(1:num_vertici, 4) = 0.0;
 vertici_4D(num_vertici + 1:2*num_vertici, 1:3) = vertici_finali;
 vertici_4D(num_vertici + 1:2*num_vertici, 4) = 1.0;
 
-
 % Calcolo dell'iper-rettangolo che racchiude l'intero dominio spazio-temporale
 limiti_min = min(vertici_4D, [], 1);
 limiti_max = max(vertici_4D, [], 1);
