@@ -1,7 +1,7 @@
 # OptimalPolyCuba3D
 
 <p align="center">
-  <img src="assets/banner.png" alt="Mesh con i nodi di cubatura" width="80%">
+  <img src="assets/banner.png" alt="Mesh con nodi di cubatura" width="80%">
 </p>
 
 Questa directory contiene le implementazioni del metodo **OptimalPolyCuba3D (OPC3D)**, basato sulla costruzione di regole di cubatura mediante una base tensoriale di polinomi di Chebyshev e sul calcolo dei momenti geometrici del dominio poliedrale tramite il teorema della divergenza applicato alle facce triangolari del bordo.
@@ -13,18 +13,6 @@ Il progetto comprende tre implementazioni dello stesso metodo:
 - **Fortran parallela** (`Parallel3D/`): versione della precedente con parallelizzazione OpenMP.
 
 In tutte le versioni la routine principale si chiama `OPC3D`.
-
-## Indice
-
-1. [Struttura della directory](#struttura-della-directory)
-2. [Il metodo in breve](#il-metodo-in-breve)
-3. [Implementazione MATLAB](#implementazione-matlab)
-4. [Implementazione Fortran](#implementazione-fortran)
-5. [Implementazione Fortran parallela (OpenMP)](#implementazione-fortran-parallela-openmp)
-6. [Rappresentazione del dominio](#rappresentazione-del-dominio)
-7. [Visualizzazione](#visualizzazione)
-8. [Autore](#autore)
-9. [Riferimenti](#riferimenti)
 
 ---
 
