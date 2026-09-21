@@ -4,8 +4,6 @@ function [XYZ, W] = OPC3D(ade, vertices, facets, method)
 %
 % function [XYZ, W] = OPC3D(ade, vertices, facets)
 %
-% O.P.C.3D = "Optimal 3D Polyhedron Cubature"
-%
 % Calcola un'approssimazione numerica di un integrale di volume
 % tridimensionale su un dominio poliedrico rappresentato mediante
 % una mesh superficiale triangolare chiusa.

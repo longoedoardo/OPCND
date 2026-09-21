@@ -23,15 +23,14 @@ function [coeffs] = tenscheb_norm2sq(chebyshev_indices)
 %
 % OUTPUT:
 %
-% coeffs: il valore dell'integrale del quadrato di ogni polinomio della base
-%         (prodotto scalare del polinomio con se stesso)
+% coeffs: valore dell'integrale del quadrato di ogni polinomio della base
 %
 %**************************************************************************
 
 [~, d] = size(chebyshev_indices);
 
-% Conta in modo vettoriale quanti indici per riga sono diversi da zero
-nonzero_counts = sum(chebyshev_indices ~= 0, 2); % N x 1
+% Conta degli indici, per riga, diversi da zero
+nonzero_counts = sum(chebyshev_indices ~= 0, 2);
 
 % Calcola coefficiente pi^d / 2^nonzero_counts
 coeffs = (pi^d) ./ (2 .^ nonzero_counts);

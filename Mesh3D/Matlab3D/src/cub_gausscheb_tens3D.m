@@ -4,7 +4,7 @@ function XYZW = cub_gausscheb_tens3D(deg)
 %
 % function XYZW = cub_gausscheb_tens3D(deg)
 %
-% Calcola i punti e i pesi per l'integrazione numerica (cubatura) in 3D.
+% Calcola i punti e i pesi per l'integrazione numerica in 3D.
 % Utilizza una griglia a prodotto tensoriale basata sui nodi di Gauss-Chebyshev.
 %
 %**************************************************************************

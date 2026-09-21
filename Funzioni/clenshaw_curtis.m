@@ -68,12 +68,12 @@ else
 
 end
 
-% Mettiamo in ordine crescente i nodi
+% Ordine crescente per i nodi
 [x, ind] = sort(x);
 w = w(ind);
 
-% Applicata una trasformazione dall'intervallo [-1,1] all'intervallo [a,b]
-% per ricondursi al caso generale
+% Trasformazione dall'intervallo [-1,1] all'intervallo [a,b] per ricondursi 
+% al caso generale
 x = (a + b)/2 + (b - a)/2 * x;
 w = w * (b - a)/2;
 

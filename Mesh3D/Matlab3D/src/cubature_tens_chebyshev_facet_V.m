@@ -3,24 +3,30 @@ function chebyshev_moms = cubature_tens_chebyshev_facet_V(nodes, weights, chebys
 %
 % moments = chebyshev_moments_polyhedron(vertices, facets, ade, chebyshev_indices, dbox)
 %
-% Calcola gli integrali di volume sul poliedro definito da 'vertices' e 'facets'
-% per una base di polinomi tensoriali di Chebyshev P(x,y,z) = T_i(x)*T_j(y)*T_k(z),
-% sfruttando il Teorema della Divergenza per convertire l'integrale di volume
+% Calcola gli integrali di volume sul poliedro per una base di polinomi 
+% tensoriali di Chebyshev P(x,y,z) = T_i(x)*T_j(y)*T_k(z), sfruttando il 
+% Teorema della Divergenza per convertire l'integrale di volume
 % in un integrale di superficie sulle facce.
 %
 %**************************************************************************
 %
 % INPUT:
-%   vertices            Matrice [m x 3] delle coordinate dei vertici.
-%   facets              Matrice [n x 3] degli indici dei vertici per ogni faccia.
-%   ade                 Grado algebrico massimo (totale o di riferimento).
-%   chebyshev_indices   Matrice degli indici (i, j, k) della base tensoriale.
-%   dbox                Iper-rettangolo [min_x, max_x, ..., max_z] del dominio.
+%
+%   vertices:               Matrice [m x 3] delle coordinate dei vertici
+%
+%   facets:                 Matrice [n x 3] degli indici dei vertici 
+%                           per ogni faccia
+%
+%   ade:                    Grado algebrico massimo
+%
+%   chebyshev_indices:      Matrice degli indici (i, j, k) della base tensoriale
+%
+%   dbox:                   Iper-rettangolo [min_x, max_x, ..., max_z] del dominio
 %
 %**************************************************************************
 %
 % OUTPUT:
-%   moments             Vettore colonna con i momenti integrati per ciascuna tripla.
+%   moments:                Vettore colonna con i momenti integrati per ciascuna tripla.
 %
 %**************************************************************************
 
@@ -51,15 +57,16 @@ TX = chebpolys(max_i + 1, x);
 TY = chebpolys(max_j, X_ref(:,2));
 TZ = chebpolys(max_k, X_ref(:,3));
 
-% Costruzione diretta delle primitive nella direzione x.
-% Viene allocata solamente la matrice necessaria per i momenti richiesti.
+% Costruzione diretta delle primitive nella direzione x
+% Viene allocata solamente la matrice necessaria per i momenti richiesti
 PhiX = zeros(num_pts, num_moments);
 
 % Gli indici nella direzione x vengono separati in tre casi per evitare
-% integrazione numerica e utilizzare le primitive analitiche.
+% integrazione numerica e utilizzare le primitive analitiche
 is0 = (chebyshev_indices(:,1) == 0);
 is1 = (chebyshev_indices(:,1) == 1);
 isN = (chebyshev_indices(:,1) >= 2);
+
 % Primitiva di T_0(x) = 1
 PhiX(:,is0) = repmat(x, 1, nnz(is0));
 
@@ -74,19 +81,19 @@ if any(isN)
         x .* TX(:,i + 1) ./ (i - 1);
 end
 
-% Estrazione delle sole colonne necessarie nelle altre direzioni.
+% Estrazione delle sole colonne necessarie nelle altre direzioni
 TY_cols = TY(:,idx_j);
 TZ_cols = TZ(:,idx_k);
 
-% Costruzione vettorializzata dell'integrando.
+% Costruzione vettorializzata dell'integrando
 % Il peso della quadratura viene applicato direttamente alla primitiva
-% nella direzione x.
+% nella direzione x
 P = PhiX .* weights(:);
 P = P .* TY_cols;
 P = P .* TZ_cols;
 
 % La trasformazione dalla coordinata fisica x alla coordinata di
-% riferimento introduce il fattore dx = (xmax - xmin)/2 dxi.
+% riferimento introduce il fattore dx = (xmax - xmin)/2 dxi
 B1 = 0.5 * (dbox(2,1) - dbox(1,1));
 
 % Somma dei contributi dei punti di quadratura

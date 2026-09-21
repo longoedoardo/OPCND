@@ -58,8 +58,6 @@ n1D = ceil((ade + 1) / 2);
 
 [tau_nodes, tau_weights] = lgwt(n1D, 0, 1);
 
-
-
 n_tri = numel(r);
 n_tau = numel(tau_nodes);
 

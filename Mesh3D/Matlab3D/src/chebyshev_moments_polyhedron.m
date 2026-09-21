@@ -6,7 +6,7 @@ function moments = chebyshev_moments_polyhedron(vertices, facets, ade, chebyshev
 %                                           chebyshev_indices, dbox, method)
 %
 % Calcolo dei momenti di una base di polinomi di Chebyshev tensoriali:
-%                         P(x,y,z) = T_i(x) * T_j(y) * T_k(z)
+%                    P(x,y,z) = T_i(x) * T_j(y) * T_k(z)
 % con grado totale (i+j+k) <= ade, integrati sul volume di un poliedro.
 %
 % L'integrale di volume viene ricondotto a un integrale di superficie sulle

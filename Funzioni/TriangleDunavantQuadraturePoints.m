@@ -29,7 +29,6 @@ vec2 = C - A;
 cp = cross(vec1, vec2); % 1x3
 area2 = norm(cp); % = 2 * area
 
-
 order_num = dunavant_order_num(rule); % Calcolo indice della regola
 [xyrif, wrif] = dunavant_rule(rule, order_num); % ottengo le coordinate di riferimento
 % e i pesi di riferimento sul triangolo di riferimento

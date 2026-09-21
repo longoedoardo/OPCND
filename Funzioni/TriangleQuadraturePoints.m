@@ -19,8 +19,8 @@ function [IntGaussP, IntGaussW] = TriangleQuadraturePoints(nGP)
 % mu1 con la quadratura di Gauss-Jacobi di peso (1-t)^1 (alpha=1, beta=0)
 % e mu2 con Gauss-Legendre standard (alpha=0, beta=0).
 %
-% Algoritmo di Golub-Welsch: nodi e pesi calcolati tramite diagonalizzazione
-% della matrice di Jacobi (funzione locale gaujac).
+% Viene implementato inoltre l'algoritmo di Golub-Welsch: nodi e pesi 
+% calcolati tramite diagonalizzazione della matrice di Jacobi 
 %
 %**************************************************************************
 

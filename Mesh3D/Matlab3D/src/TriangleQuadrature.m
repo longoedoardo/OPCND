@@ -12,8 +12,6 @@ function [nodes, weights] = TriangleQuadrature(method, ade)
 %   "GJ" : quadratura di Gauss-Jacobi
 %   "D"  : quadratura simmetrica di Dunavant
 %
-% Per il metodo di Gauss-Jacobi, il numero di punti viene determinato in
-% funzione del grado algebrico massimo richiesto.
 % I nodi e i pesi restituiti sono riferiti al triangolo di riferimento.
 %
 %**************************************************************************
@@ -173,12 +171,12 @@ function [nodi_rif, pesi_rif] = TriangleDunavantQuadraturePoints(rule)
 % sul triangolo di riferimento.
 %
 % INPUT:
-%   rule       - (int) Grado della regola di quadratura Dunavant.
+%   rule       - Grado della regola di quadratura Dunavant
 %
 % OUTPUT:
-%   nodi_rif   - (Np x 2) Coordinate dei nodi di quadratura sul triangolo
+%   nodi_rif   - Coordinate dei nodi di quadratura sul triangolo
 %                di riferimento.
-%   pesi_rif   - (Np x 1) Pesi di quadratura sul triangolo di riferimento.
+%   pesi_rif   - Pesi di quadratura sul triangolo di riferimento.
 %
 % Per poter utilizzare la seguente funzione, sono necessari gli script
 % contenuti nella cartella "Dunavant".
