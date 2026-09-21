@@ -1,8 +1,8 @@
-PROGRAM example_concave
+PROGRAM example_convex
 
-USE TypesDef, ONLY: dp
-USE PolyhedronMesh, ONLY: t_polyhedron, MeshReader
-USE OPC3D_Module, ONLY: OPC3D
+    USE TypesDef, ONLY: dp
+    USE PolyhedronMesh, ONLY: t_polyhedron, MeshReader
+    USE OPC3D_Module, ONLY: OPC3D
 
     IMPLICIT NONE
 
@@ -20,7 +20,7 @@ USE OPC3D_Module, ONLY: OPC3D
     !***********************************************************************
 
     !***********************************************************************
-    !   Dichiarazione delle variabili
+    ! Dichiarazione delle variabili
     !***********************************************************************
 
     INTEGER                         :: ade
@@ -38,15 +38,15 @@ USE OPC3D_Module, ONLY: OPC3D
     CHARACTER(LEN=256)              :: tri_file
 
     !***********************************************************************
-    !   Parametri e caricamento mesh
+    ! Parametri e caricamento mesh
     !***********************************************************************
 
     ade = 1
 
     WRITE(*,'(A)')
     WRITE(*,'(A)') '**************************************************************'
-    WRITE(*,'(A)') '                 OPTIMALPOLYCUBA3D'
-    WRITE(*,'(A)') '        Cubatura su Dominio Poliedrale concavo'
+    WRITE(*,'(A)') '                          OPC3D'
+    WRITE(*,'(A)') '        Cubatura su Dominio Poliedrale Concavo'
     WRITE(*,'(A)') '**************************************************************'
     WRITE(*,'(A)')
 
@@ -66,13 +66,13 @@ USE OPC3D_Module, ONLY: OPC3D
     WRITE(*,'(A,I0)') 'Numero di facce:       ', n_facce
 
     !***********************************************************************
-    !   Definizione funzione integranda
+    ! Definizione funzione integranda
     !***********************************************************************
 
     WRITE(*,'(A)') 'Funzione integranda:   f(x,y,z) = 1'
 
     !***********************************************************************
-    !   Inizio regola di cubatura
+    ! Inizio regola di cubatura
     !***********************************************************************
 
     WRITE(*,'(A)')
@@ -93,7 +93,7 @@ USE OPC3D_Module, ONLY: OPC3D
     END DO
 
     !***********************************************************************
-    !   Visualizzazione risultati e punti di cubatura
+    ! Visualizzazione risultati e punti di cubatura
     !***********************************************************************
 
     WRITE(*,'(A)') 'Fine Cubatura...'
@@ -105,10 +105,7 @@ USE OPC3D_Module, ONLY: OPC3D
     CONTAINS
 
     !***********************************************************************
-    !   Funzione integranda
-    !
-    !   Modificare esclusivamente questa funzione per cambiare
-    !   l'integranda dell'esempio.
+    ! Funzione integranda
     !***********************************************************************
 
     REAL(dp) FUNCTION f(x,y,z)
@@ -123,4 +120,4 @@ USE OPC3D_Module, ONLY: OPC3D
 
     END FUNCTION f
 
-END PROGRAM example_concave
+END PROGRAM example_convex

@@ -20,7 +20,7 @@ PROGRAM example_convex
     !***********************************************************************
 
     !***********************************************************************
-    !   Dichiarazione delle variabili
+    ! Dichiarazione delle variabili
     !***********************************************************************
 
     INTEGER                         :: ade
@@ -38,14 +38,14 @@ PROGRAM example_convex
     CHARACTER(LEN=256)              :: tri_file
 
     !***********************************************************************
-    !   Parametri e caricamento mesh
+    ! Parametri e caricamento mesh
     !***********************************************************************
 
     ade = 1
 
     WRITE(*,'(A)')
     WRITE(*,'(A)') '**************************************************************'
-    WRITE(*,'(A)') '                 OPTIMALPOLYCUBA3D'
+    WRITE(*,'(A)') '                         OPC3D'
     WRITE(*,'(A)') '        Cubatura su Dominio Poliedrale Convesso'
     WRITE(*,'(A)') '**************************************************************'
     WRITE(*,'(A)')
@@ -53,8 +53,8 @@ PROGRAM example_convex
     WRITE(*,'(A,I0)') 'Ade:                   ', ade
 
     ! Percorsi relativi alla cartella examples.
-    vertici_file = 'convex_vertex.dat'
-    tri_file     = 'convex_tri.dat'
+    vertici_file = 'concave_vertex.dat'
+    tri_file     = 'concave_tri.dat'
 
     ! Lettura della mesh superficiale triangolare.
     CALL MeshReader(vertici_file, tri_file, poly)
@@ -66,13 +66,13 @@ PROGRAM example_convex
     WRITE(*,'(A,I0)') 'Numero di facce:       ', n_facce
 
     !***********************************************************************
-    !   Definizione funzione integranda
+    ! Definizione funzione integranda
     !***********************************************************************
 
     WRITE(*,'(A)') 'Funzione integranda:   f(x,y,z) = 1'
 
     !***********************************************************************
-    !   Inizio regola di cubatura
+    ! Inizio regola di cubatura
     !***********************************************************************
 
     WRITE(*,'(A)')
@@ -93,7 +93,7 @@ PROGRAM example_convex
     END DO
 
     !***********************************************************************
-    !   Visualizzazione risultati e punti di cubatura
+    ! Visualizzazione risultati e punti di cubatura
     !***********************************************************************
 
     WRITE(*,'(A)') 'Fine Cubatura...'
@@ -105,10 +105,7 @@ PROGRAM example_convex
     CONTAINS
 
     !***********************************************************************
-    !   Funzione integranda
-    !
-    !   Modificare esclusivamente questa funzione per cambiare
-    !   l'integranda dell'esempio.
+    ! Funzione integranda
     !***********************************************************************
 
     REAL(dp) FUNCTION f(x,y,z)

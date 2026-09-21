@@ -20,7 +20,7 @@ USE OPC3D_Module, ONLY: OPC3D
     !***********************************************************************
 
     !***********************************************************************
-    !   Dichiarazione delle variabili
+    ! Dichiarazione delle variabili
     !***********************************************************************
 
     INTEGER                         :: ade
@@ -38,14 +38,14 @@ USE OPC3D_Module, ONLY: OPC3D
     CHARACTER(LEN=256)              :: tri_file
 
     !***********************************************************************
-    !   Parametri e caricamento mesh
+    ! Parametri e caricamento mesh
     !***********************************************************************
 
     ade = 2
 
     WRITE(*,'(A)')
     WRITE(*,'(A)') '**************************************************************'
-    WRITE(*,'(A)') '                 OPTIMALPOLYCUBA3D'
+    WRITE(*,'(A)') '                            OPC3D'
     WRITE(*,'(A)') '        Cubatura su Dominio Poliedrale "Stanford Bunny"'
     WRITE(*,'(A)') '**************************************************************'
     WRITE(*,'(A)')
@@ -93,7 +93,7 @@ USE OPC3D_Module, ONLY: OPC3D
     END DO
 
     !***********************************************************************
-    !   Visualizzazione risultati e punti di cubatura
+    ! Visualizzazione risultati e punti di cubatura
     !***********************************************************************
 
     WRITE(*,'(A)') 'Fine Cubatura...'
@@ -105,10 +105,7 @@ USE OPC3D_Module, ONLY: OPC3D
     CONTAINS
 
     !***********************************************************************
-    !   Funzione integranda
-    !
-    !   Modificare esclusivamente questa funzione per cambiare
-    !   l'integranda dell'esempio.
+    ! Funzione integranda
     !***********************************************************************
 
     REAL(dp) FUNCTION f(x,y,z)

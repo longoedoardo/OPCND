@@ -25,7 +25,7 @@ IMPLICIT NONE
 
 
 !***********************************************************************
-!   Dichiarazione delle variabili
+! Dichiarazione delle variabili
 !***********************************************************************
 
 INTEGER                         :: ade
@@ -49,19 +49,19 @@ REAL(dp), ALLOCATABLE           :: fXYZ(:)
 
 
 !***********************************************************************
-!   Parametri e caricamento mesh
+! Parametri e caricamento mesh
 !***********************************************************************
 
 WRITE(*,'(A)')
 WRITE(*,'(A)') '**************************************************************'
-WRITE(*,'(A)') '                 OPTIMALPOLYCUBA3D'
+WRITE(*,'(A)') '                       OPC3D'
 WRITE(*,'(A)') '                 Cubatura sul Cubo'
 WRITE(*,'(A)') '**************************************************************'
 WRITE(*,'(A)')
 
 
 !***********************************************************************
-!   Vertici e facce del cubo [-1,1]^3
+! Vertici e facce del cubo [-1,1]^3
 !***********************************************************************
 
 ALLOCATE(vertices(8,3))
@@ -102,7 +102,7 @@ WRITE(*,'(A,I0)') 'Numero di vertici:     ', n_vertici
 WRITE(*,'(A,I0)') 'Numero di facce:       ', n_facce
 
 !***********************************************************************
-!   Definizione funzione integranda f1
+! Definizione funzione integranda f1
 !***********************************************************************
 
 ade = 1
@@ -117,7 +117,7 @@ WRITE(*,'(A)')       'Funzione integranda:   f_1(x,y,z) = 1'
 WRITE(*,'(A,ES22.15)') 'Integrale esatto:      ', I_exact
 
 !***********************************************************************
-!   Inizio regola di cubatura
+! Inizio regola di cubatura
 !***********************************************************************
 
 WRITE(*,'(A)')
@@ -131,7 +131,7 @@ CALL CPU_TIME(t_end)
 elapsedTime = t_end - t_start
 
 !***********************************************************************
-!   Valutazione della funzione integranda
+! Valutazione della funzione integranda
 !***********************************************************************
 
 ALLOCATE(fXYZ(SIZE(W)))
@@ -144,7 +144,7 @@ Integrale = DOT_PRODUCT(W, fXYZ)
 DEALLOCATE(fXYZ)
 
 !***********************************************************************
-!   Visualizzazione risultati
+! Visualizzazione risultati
 !***********************************************************************
 
 WRITE(*,'(A)') 'Fine Cubatura...'
@@ -158,7 +158,7 @@ WRITE(*,'(A,ES14.6,A)') 'Tempo di calcolo:      ', elapsedTime, ' s'
 
 
 !***********************************************************************
-!   Definizione funzione integranda f2
+! Definizione funzione integranda f2
 !***********************************************************************
 
 ade = 2
@@ -173,7 +173,7 @@ WRITE(*,'(A)')       'Funzione integranda:   f_2(x,y,z) = x^2 + y^2 + z^2'
 WRITE(*,'(A,ES22.15)') 'Integrale esatto:      ', I_exact
 
 !***********************************************************************
-!   Inizio regola di cubatura
+! Inizio regola di cubatura
 !***********************************************************************
 
 WRITE(*,'(A)')
@@ -187,7 +187,7 @@ CALL CPU_TIME(t_end)
 elapsedTime = t_end - t_start
 
 !***********************************************************************
-!   Valutazione della funzione integranda
+! Valutazione della funzione integranda
 !***********************************************************************
 
 IF (ALLOCATED(fXYZ)) DEALLOCATE(fXYZ)
@@ -202,7 +202,7 @@ Integrale = DOT_PRODUCT(W, fXYZ)
 DEALLOCATE(fXYZ)
 
 !***********************************************************************
-!   Visualizzazione risultati
+! Visualizzazione risultati
 !***********************************************************************
 
 WRITE(*,'(A)') 'Fine Cubatura...'
@@ -215,7 +215,7 @@ WRITE(*,'(A,ES14.6)')  'Errore assoluto:       ', error_abs
 WRITE(*,'(A,ES14.6,A)') 'Tempo di calcolo:      ', elapsedTime, ' s'
 
 !***********************************************************************
-!   Definizione funzione integranda f3
+! Definizione funzione integranda f3
 !***********************************************************************
 
 ade = 6
@@ -232,7 +232,7 @@ WRITE(*,'(A,ES22.15)') 'Integrale esatto:      ', I_exact
 
 
 !***********************************************************************
-!   Inizio regola di cubatura
+! Inizio regola di cubatura
 !***********************************************************************
 
 WRITE(*,'(A)')
@@ -246,7 +246,7 @@ CALL CPU_TIME(t_end)
 elapsedTime = t_end - t_start
 
 !***********************************************************************
-!   Valutazione della funzione integranda
+! Valutazione della funzione integranda
 !***********************************************************************
 
 IF (ALLOCATED(fXYZ)) DEALLOCATE(fXYZ)
@@ -261,7 +261,7 @@ Integrale = DOT_PRODUCT(W, fXYZ)
 DEALLOCATE(fXYZ)
 
 !***********************************************************************
-!   Visualizzazione risultati
+! Visualizzazione risultati
 !***********************************************************************
 
 WRITE(*,'(A)') 'Fine Cubatura...'
@@ -274,7 +274,7 @@ WRITE(*,'(A,ES14.6)')  'Errore assoluto:       ', error_abs
 WRITE(*,'(A,ES14.6,A)') 'Tempo di calcolo:      ', elapsedTime, ' s'
 
 !***********************************************************************
-!   Deallocazione memoria
+! Deallocazione memoria
 !***********************************************************************
 
 IF (ALLOCATED(vertices)) DEALLOCATE(vertices)
@@ -285,7 +285,7 @@ IF (ALLOCATED(W))        DEALLOCATE(W)
 CONTAINS
 
 !***********************************************************************
-!   Funzione integranda f1
+! Funzione integranda f1
 !***********************************************************************
 
 REAL(dp) FUNCTION f1(x,y,z)
@@ -302,7 +302,7 @@ END FUNCTION f1
 
 
 !***********************************************************************
-!   Funzione integranda f2
+! Funzione integranda f2
 !***********************************************************************
 
 REAL(dp) FUNCTION f2(x,y,z)
@@ -319,7 +319,7 @@ END FUNCTION f2
 
 
 !***********************************************************************
-!   Funzione integranda f3
+! Funzione integranda f3
 !***********************************************************************
 
 REAL(dp) FUNCTION f3(x,y,z)

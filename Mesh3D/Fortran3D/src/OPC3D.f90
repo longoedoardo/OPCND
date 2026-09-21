@@ -16,26 +16,9 @@ SUBROUTINE OPC3D(ade, vertices, facets, method, XYZ, W)
 ! tridimensionale su un dominio poliedrico rappresentato mediante
 ! una mesh superficiale triangolare chiusa e orientata.
 !
-! La regola di cubatura è costruita combinando una base di Chebyshev
-! tensoriale shape-independent con i momenti shape-dependent del dominio,
-! calcolati a partire dalla rappresentazione della superficie mediante
-! il teorema della divergenza.
-!
 ! Il metodo non richiede una decomposizione volumetrica del dominio
 ! mediante tetraedri e utilizza esclusivamente la triangolazione della
 ! superficie del poliedro.
-!
-! La costruzione della regola è suddivisa in due componenti:
-!
-!   1. PARTE SHAPE-INDEPENDENT
-!      Costruzione della griglia tensoriale di Gauss-Chebyshev sul cubo
-!      di riferimento [-1,1]^3 e della corrispondente matrice di
-!      Vandermonde-Chebyshev.
-!
-!   2. PARTE SHAPE-DEPENDENT
-!      Calcolo dei momenti della base di Chebyshev sul dominio fisico
-!      e successivo riscalamento della regola sulla bounding box della
-!      mesh.
 !
 !***********************************************************************
 !

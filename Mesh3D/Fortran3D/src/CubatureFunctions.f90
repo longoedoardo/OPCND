@@ -46,7 +46,6 @@ MODULE CubatureFunctions
          ! triangolo di area 1/2.
          weights = 2.0_dp * weights
 
-
       ! METODO D: Quadratura di Dunavant
       ELSE IF (TRIM(method) == 'D') THEN
 
@@ -185,7 +184,6 @@ MODULE CubatureFunctions
       REAL(dp) :: area2
       !*******************************************************************************
 
-
       ! Dimensioni
       num_indici = SIZE(chebyshev_indices, 1)
       n_facce = SIZE(facets, 1)
@@ -241,7 +239,7 @@ MODULE CubatureFunctions
    SUBROUTINE cubature_tens_chebyshev_facet_V(nodes, weights, chebyshev_indices, dbox, chebyshev_moms)
 
       !*******************************************************************************
-      ! Calcola i momenti di Chebyshev su una faccia triangolare 3D 
+      ! Calcola i momenti di Chebyshev su una faccia triangolare 
       !*******************************************************************************
 
       IMPLICIT NONE
