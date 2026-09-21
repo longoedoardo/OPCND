@@ -1,7 +1,7 @@
 # OptimalPolyCuba3D
 
 <p align="center">
-  <img src="assets/banner.png" alt="Mesh con nodi di cubatura" width="80%">
+  <img src="assets/banner.png" alt="Mesh con nodi di cubatura" width="40%">
 </p>
 
 Questa directory contiene le implementazioni del metodo **OptimalPolyCuba3D (OPC3D)**, basato sulla costruzione di regole di cubatura mediante una base tensoriale di polinomi di Chebyshev e sul calcolo dei momenti geometrici del dominio poliedrale tramite il teorema della divergenza applicato alle facce triangolari del bordo.
