@@ -71,16 +71,6 @@ function [IntGaussP, IntGaussW] = TriangleGJQuadraturePoints(nGP)
 %
 % function [IntGaussP, IntGaussW] = TriangleGJQuadraturePoints(nGP)
 %
-% INPUT:
-% - nGP       : Scalare, numero di punti di Gauss per ogni dimensione lineare
-%            (nIntGP = nGP^2 punti totali).
-%
-% OUTPUT:
-% - IntGaussP : Matrice (nGP^2 x 2) contenente le coordinate (r,s) sul
-%               triangolo di riferimento di vertici (0,0), (1,0), (0,1).
-% - IntGaussW : Vettore colonna (nGP^2 x 1) dei pesi di quadratura.
-%               sum(IntGaussW) = 0.5 (area del triangolo di riferimento).
-%
 % Mappa il quadrato [0,1]^2 nel triangolo di riferimento tramite la
 % trasformazione: r = mu1, s = mu2 * (1 - mu1).
 % Lo Jacobiano di questa mappa è (1 - mu1); per compensarlo si integra
@@ -90,6 +80,20 @@ function [IntGaussP, IntGaussW] = TriangleGJQuadraturePoints(nGP)
 % Algoritmo di Golub-Welsch: nodi e pesi calcolati tramite diagonalizzazione
 % della matrice di Jacobi (funzione locale gaujac, identica a quella usata
 % in TetrahedronQuadraturePoints).
+%
+%**************************************************************************
+%
+% INPUT:
+% - nGP       : Scalare, numero di punti di Gauss per ogni dimensione lineare
+%            (nIntGP = nGP^2 punti totali)
+%
+%**************************************************************************
+%
+% OUTPUT:
+% - IntGaussP : Matrice (nGP^2 x 2) contenente le coordinate (r,s) sul
+%               triangolo di riferimento di vertici (0,0), (1,0), (0,1)
+% - IntGaussW : Vettore colonna (nGP^2 x 1) dei pesi di quadratura.
+%               sum(IntGaussW) = 0.5 (area del triangolo di riferimento)
 %
 %**************************************************************************
 
@@ -170,6 +174,8 @@ function [nodi_rif, pesi_rif] = TriangleDunavantQuadraturePoints(rule)
 % Calcolo dei nodi e dei pesi di una regola di quadratura di Dunavant
 % sul triangolo di riferimento.
 %
+%**************************************************************************
+%
 % INPUT:
 %   rule       - Grado della regola di quadratura Dunavant
 %
@@ -178,10 +184,12 @@ function [nodi_rif, pesi_rif] = TriangleDunavantQuadraturePoints(rule)
 %                di riferimento.
 %   pesi_rif   - Pesi di quadratura sul triangolo di riferimento.
 %
+%**************************************************************************
+%
 % Per poter utilizzare la seguente funzione, sono necessari gli script
 % contenuti nella cartella "Dunavant".
 %
-%********************************************************************************
+%**************************************************************************
 
 thisFolder = fileparts(mfilename('fullpath'));
 addpath(fullfile(thisFolder, 'Dunavant'));

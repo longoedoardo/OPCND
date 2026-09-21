@@ -32,6 +32,8 @@ function [XYZ, W] = OPC3D(ade, vertices, facets, method)
 %       * "D": Metodo simmetrico di Dunavant
 %       * "GJ": Metodo di Gauss-Jacobi
 %
+%**************************************************************************
+%
 %   OUTPUT:
 %   - XYZ:
 %       Nodi di quadratura

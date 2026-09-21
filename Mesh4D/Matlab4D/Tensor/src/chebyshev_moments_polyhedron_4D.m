@@ -1,7 +1,6 @@
 function moments = chebyshev_moments_polyhedron_4D(vertici_4D, facets, ...
                                       ade, chebyshev_indices, bbox, method)
 
-
 %**************************************************************************
 %
 % moments = chebyshev_moments_polyhedron_4D(vertici_4D, Hyperfacets, ade, 

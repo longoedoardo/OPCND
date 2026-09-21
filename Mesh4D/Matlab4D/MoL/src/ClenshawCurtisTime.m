@@ -8,17 +8,24 @@ function [tau_nodi, tau_pesi] = ClenshawCurtisTime(n_tau)
 % I nodi sono ottenuti mediante una trasformazione affine dei nodi di
 % Chebyshev-Lobatto definiti sull'intervallo [-1,1].
 %
+%**************************************************************************
+%
 % INPUT:
-%     n_tau     : Numero di nodi di quadratura temporale.
+%
+%     n_tau     : Numero di nodi di quadratura temporale
+%
+%**************************************************************************
 %
 % OUTPUT:
+%
 %     tau_nodi  : Vettore colonna (n_tau x 1) dei nodi di Chebyshev-Lobatto
-%                 nell'intervallo [0,1], ordinati in senso crescente.
-%                 I due estremi 0 e 1 sono inclusi.
+%                 nell'intervallo [0,1], ordinati in senso crescente
+%                 I due estremi 0 e 1 sono inclusi
+%
 %     tau_pesi  : Vettore colonna (n_tau x 1) dei pesi della formula di
 %                 quadratura di Clenshaw-Curtis associati ai nodi tau_nodi.
 %                 I pesi sono normalizzati sull'intervallo [0,1], pertanto
-%                 sum(tau_pesi) = 1.
+%                 sum(tau_pesi) = 1
 %
 %**************************************************************************
 

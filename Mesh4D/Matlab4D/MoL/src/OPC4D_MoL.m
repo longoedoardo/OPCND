@@ -49,6 +49,8 @@ function [XYZtau, W] = OPC4D_MoL(ade, n_tau, vertici_iniziali, vertici_finali, f
 %       * "D": Metodo simmetrico di Dunavant
 %       * "GJ": Metodo di Gauss-Jacobi
 %
+%**************************************************************************
+%
 %   OUTPUT:
 %   - XYZtau:
 %       Matrice (N x 4) contenente i nodi della regola di cubatura
