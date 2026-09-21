@@ -1,71 +1,138 @@
 MODULE PolyhedronMesh
+    USE TypesDef
+    IMPLICIT NONE
 
-   USE TypesDef
-   IMPLICIT NONE
+    ! Definizione della struttura dei dati
+    TYPE :: t_polyhedron
+        REAL(dp), ALLOCATABLE                       :: vertici(:,:)
+        REAL(dp), ALLOCATABLE                       :: vertici_new(:,:)
+        INTEGER, ALLOCATABLE                        :: facce(:,:)
+    END TYPE t_polyhedron
 
-   TYPE :: t_polyhedron
-      REAL(dp), ALLOCATABLE :: vertici(:,:)
-      REAL(dp), ALLOCATABLE :: vertici_new(:,:)
-      INTEGER, ALLOCATABLE  :: facce(:,:)
-   END TYPE t_polyhedron
+    CONTAINS
 
-CONTAINS
+    SUBROUTINE MeshReader(vertici_file, vertici_new_file, tri_file, poly)
 
-   SUBROUTINE MeshReader(vertices_file, vertices_new_file, facets_file, poly)
-      CHARACTER(LEN=*), INTENT(IN)     :: vertices_file, vertices_new_file, facets_file
-      TYPE(t_polyhedron), INTENT(OUT)  :: poly
+    IMPLICIT NONE
 
-      CALL read_real_matrix_3(vertices_file, poly%vertici)
-      CALL read_real_matrix_3(vertices_new_file, poly%vertici_new)
-      CALL read_integer_matrix_3(facets_file, poly%facce)
-   END SUBROUTINE MeshReader
+    !***********************************************************************
+    ! Argomenti
+    !***********************************************************************
+    CHARACTER(LEN=*), INTENT(IN)                    :: vertici_file
+    CHARACTER(LEN=*), INTENT(IN)                    :: vertici_new_file
+    CHARACTER(LEN=*), INTENT(IN)                    :: tri_file
 
-   SUBROUTINE read_real_matrix_3(filename, a)
-      CHARACTER(LEN=*), INTENT(IN)        :: filename
-      REAL(dp), ALLOCATABLE, INTENT(OUT)  :: a(:,:)
-      INTEGER                             :: unit, ios, n, i
+    TYPE(t_polyhedron), INTENT(OUT) :: poly
+    !***********************************************************************
+    ! Variabili locali
+    !***********************************************************************
+    INTEGER :: u_vert
+    INTEGER :: u_vert_new
+    INTEGER :: u_tri
+    INTEGER :: ierr
 
-      n = count_rows(filename)
-      ALLOCATE(a(n, 3))
-      OPEN(NEWUNIT=unit, FILE=filename, STATUS='OLD', ACTION='READ', IOSTAT=ios)
-      IF (ios /= 0) ERROR STOP 'ERRORE: impossibile aprire file vertici.'
-      DO i = 1, n
-         READ(unit, *, IOSTAT=ios) a(i,1), a(i,2), a(i,3)
-         IF (ios /= 0) ERROR STOP 'ERRORE: impossibile leggere file vertici.'
-      END DO
-      CLOSE(unit)
-   END SUBROUTINE read_real_matrix_3
+    INTEGER :: n_vertici
+    INTEGER :: n_vertici_new
+    INTEGER :: n_facce
 
-   SUBROUTINE read_integer_matrix_3(filename, a)
-      CHARACTER(LEN=*), INTENT(IN)       :: filename
-      INTEGER, ALLOCATABLE, INTENT(OUT)  :: a(:,:)
-      INTEGER                            :: unit, ios, n, i
+    INTEGER :: i
+    INTEGER :: j
+    !***********************************************************************
 
-      n = count_rows(filename)
-      ALLOCATE(a(n, 3))
-      OPEN(NEWUNIT=unit, FILE=filename, STATUS='OLD', ACTION='READ', IOSTAT=ios)
-      IF (ios /= 0) ERROR STOP 'ERRORE: impossibile aprire file facce.'
-      DO i = 1, n
-         READ(unit, *, IOSTAT=ios) a(i,1), a(i,2), a(i,3)
-         IF (ios /= 0) ERROR STOP 'ERRORE: impossibile leggere file facce.'
-      END DO
-      CLOSE(unit)
-   END SUBROUTINE read_integer_matrix_3
+    ! Inizio lettura configurazione iniziale
+    OPEN(NEWUNIT=u_vert, FILE=vertici_file, STATUS='OLD', &
+         ACTION='READ', IOSTAT=ierr)
 
-   INTEGER FUNCTION count_rows(filename) RESULT(n)
-      CHARACTER(LEN=*), INTENT(IN) :: filename
-      INTEGER                      :: unit, ios
-      CHARACTER(LEN=1024)          :: line
+    IF (ierr /= 0) THEN
+        ERROR STOP 'ERRORE: impossibile aprire il file dei vertici iniziali.'
+    END IF
 
-      n = 0
-      OPEN(NEWUNIT=unit, FILE=filename, STATUS='OLD', ACTION='READ', IOSTAT=ios)
-      IF (ios /= 0) ERROR STOP 'ERRORE: impossibile aprire file mesh.'
-      DO
-         READ(unit, '(A)', IOSTAT=ios) line
-         IF (ios /= 0) EXIT
-         IF (LEN_TRIM(line) > 0) n = n + 1
-      END DO
-      CLOSE(unit)
-   END FUNCTION count_rows
+    ! Primo valore: numero di vertici
+    READ(u_vert, *, IOSTAT=ierr) n_vertici
+
+    IF (ierr /= 0) THEN
+        CLOSE(u_vert)
+        ERROR STOP 'ERRORE: impossibile leggere il numero di vertici iniziali.'
+    END IF
+
+    IF (n_vertici <= 0) THEN
+        CLOSE(u_vert)
+        ERROR STOP 'ERRORE: numero di vertici iniziali non valido.'
+    END IF
+
+    ALLOCATE(poly%vertici(n_vertici, 3))
+
+    ! Coordinate dei vertici
+    READ(u_vert, *, IOSTAT=ierr) &
+        ((poly%vertici(i,j), j=1,3), i=1,n_vertici)
+
+    IF (ierr /= 0) THEN
+        CLOSE(u_vert)
+        ERROR STOP 'ERRORE: impossibile leggere i vertici iniziali.'
+    END IF
+
+    CLOSE(u_vert)
+
+
+    ! Inizio lettura configurazione finale
+
+    OPEN(NEWUNIT=u_vert_new, FILE=vertici_new_file, STATUS='OLD', &
+         ACTION='READ', IOSTAT=ierr)
+
+    IF (ierr /= 0) THEN
+        ERROR STOP 'ERRORE: impossibile aprire il file dei vertici finali.'
+    END IF
+
+    ! Primo valore: numero di vertici
+    READ(u_vert_new, *, IOSTAT=ierr) n_vertici_new
+
+    IF (ierr /= 0) THEN
+        CLOSE(u_vert_new)
+        ERROR STOP 'ERRORE: impossibile leggere il numero di vertici finali.'
+    END IF
+
+    ALLOCATE(poly%vertici_new(n_vertici_new, 3))
+
+    ! Coordinate dei vertici finali
+    READ(u_vert_new, *, IOSTAT=ierr) &
+        ((poly%vertici_new(i,j), j=1,3), i=1,n_vertici_new)
+
+    IF (ierr /= 0) THEN
+        CLOSE(u_vert_new)
+        ERROR STOP 'ERRORE: impossibile leggere i vertici finali.'
+    END IF
+
+    CLOSE(u_vert_new)
+
+
+    ! Lettura facce triangolari
+    OPEN(NEWUNIT=u_tri, FILE=tri_file, STATUS='OLD', &
+         ACTION='READ', IOSTAT=ierr)
+
+    IF (ierr /= 0) THEN
+        ERROR STOP 'ERRORE: impossibile aprire il file delle facce.'
+    END IF
+
+    READ(u_tri, *, IOSTAT=ierr) n_facce
+
+    IF (ierr /= 0) THEN
+        CLOSE(u_tri)
+        ERROR STOP 'ERRORE: impossibile leggere il numero di facce.'
+    END IF
+
+    ALLOCATE(poly%facce(n_facce, 3))
+
+    ! Connettività delle facce
+    READ(u_tri, *, IOSTAT=ierr) &
+        ((poly%facce(i,j), j=1,3), i=1,n_facce)
+
+    IF (ierr /= 0) THEN
+        CLOSE(u_tri)
+        ERROR STOP 'ERRORE: impossibile leggere le facce triangolari.'
+    END IF
+
+    CLOSE(u_tri)
+
+END SUBROUTINE MeshReader
 
 END MODULE PolyhedronMesh

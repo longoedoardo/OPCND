@@ -53,11 +53,11 @@ LDFLAGS = \
 
 MODULE_OBJECTS = \
 $(BUILD_DIR)/TypesDef.o \
-$(BUILD_DIR)/ReferenceFunctions4D.o \
+$(BUILD_DIR)/ReferenceFunctions.o \
 $(BUILD_DIR)/TriangleQuadratureGJ.o \
 $(BUILD_DIR)/TriangleQuadratureDunavant.o \
 $(BUILD_DIR)/PrismQuadrature.o \
-$(BUILD_DIR)/CubatureTensor4D.o \
+$(BUILD_DIR)/CubatureTensor.o \
 $(BUILD_DIR)/OPC4D_Tensor.o \
 $(BUILD_DIR)/PolyhedronMesh.o
 
@@ -116,8 +116,8 @@ $(BUILD_DIR)/TypesDef.o: \
 $(SRC_DIR)/TypesDef.f90
 
 
-$(BUILD_DIR)/ReferenceFunctions4D.o: \
-$(SRC_DIR)/ReferenceFunctions4D.f90 \
+$(BUILD_DIR)/ReferenceFunctions.o: \
+$(SRC_DIR)/ReferenceFunctions.f90 \
 $(BUILD_DIR)/TypesDef.o
 
 
@@ -138,18 +138,18 @@ $(BUILD_DIR)/TriangleQuadratureGJ.o \
 $(BUILD_DIR)/TriangleQuadratureDunavant.o
 
 
-$(BUILD_DIR)/CubatureTensor4D.o: \
-$(SRC_DIR)/CubatureTensor4D.f90 \
+$(BUILD_DIR)/CubatureTensor.o: \
+$(SRC_DIR)/CubatureTensor.f90 \
 $(BUILD_DIR)/TypesDef.o \
-$(BUILD_DIR)/ReferenceFunctions4D.o \
+$(BUILD_DIR)/ReferenceFunctions.o \
 $(BUILD_DIR)/PrismQuadrature.o
 
 
 $(BUILD_DIR)/OPC4D_Tensor.o: \
 $(SRC_DIR)/OPC4D_Tensor.f90 \
 $(BUILD_DIR)/TypesDef.o \
-$(BUILD_DIR)/ReferenceFunctions4D.o \
-$(BUILD_DIR)/CubatureTensor4D.o
+$(BUILD_DIR)/ReferenceFunctions.o \
+$(BUILD_DIR)/CubatureTensor.o
 
 
 $(BUILD_DIR)/PolyhedronMesh.o: \
