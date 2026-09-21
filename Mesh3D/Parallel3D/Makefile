@@ -36,16 +36,6 @@ NCPU := $(shell sysctl -n hw.ncpu)
 # SEZIONE 2 — FLAG DI COMPILAZIONE
 # ==============================================================================
 
-# Ottimizzazione del codice.
-#
-# -O3              Ottimizzazione aggressiva.
-# -march=native    Usa le istruzioni disponibili sulla macchina corrente.
-# -flto            Link Time Optimization.
-# -funroll-loops   Srotolamento dei loop.
-#
-# Non viene utilizzato -ffast-math perché può alterare la precisione
-# numerica delle procedure di quadratura.
-
 FFLAGS = \
 -O3 \
 -march=native \
