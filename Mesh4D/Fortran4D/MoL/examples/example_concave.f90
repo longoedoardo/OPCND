@@ -1,50 +1,137 @@
 PROGRAM example_concave
 
-   USE TypesDef
-   USE PolyhedronMesh
-   USE OPC4D_MoL_Module
+USE TypesDef, ONLY: dp
+USE PolyhedronMesh, ONLY: t_polyhedron, MeshReader
+USE OPC4D_MoL_Module, ONLY: OPC4D_MoL
 
-   IMPLICIT NONE
+IMPLICIT NONE
 
-   TYPE(t_polyhedron)                 :: poly
-   REAL(dp), ALLOCATABLE              :: XYZtau(:,:)
-   REAL(dp), ALLOCATABLE              :: W(:)
-   INTEGER                            :: ade
-   INTEGER                            :: n_tau
-   INTEGER                            :: c0
-   INTEGER                            :: c1
-   INTEGER                            :: rate
-   REAL(dp)                           :: elapsed
-   REAL(dp)                           :: integral
+!***********************************************************************
+!
+!   Esempio:
+!       Cubatura 4D su dominio poliedrale concavo in movimento
+!
+!   Descrizione:
+!       Questo esempio dimostra l'utilizzo del metodo
+!       OptimalPolyCuba4D MoL per l'integrazione di una funzione su
+!       un dominio spazio-temporale (x, y, z, tau), ottenuto dalla
+!       deformazione lineare, per tau in [0,1], di un poliedro concavo
+!       rappresentato da una mesh superficiale triangolare.
+!       La configurazione iniziale (tau = 0) e quella finale (tau = 1)
+!       sono lette rispettivamente da concave_vertex.dat e
+!       concave_vertex_new.dat, con la stessa connettivita' delle facce.
+!
+!***********************************************************************
 
-   ade = 1
-   n_tau = 1000
+!***********************************************************************
+! Dichiarazione delle variabili
+!***********************************************************************
 
-   WRITE(*,'(/,A)') '**************************************************************'
-   WRITE(*,'(A)')   '                       OPC4D_MoL'
-   WRITE(*,'(A)')   '                - Metodo delle Linee -'
-   WRITE(*,'(A)')   '    Cubatura su Dominio Poliedrale Concavo in Movimento'
-   WRITE(*,'(A,/)') '**************************************************************'
+INTEGER                         :: ade, n_tau
+INTEGER                         :: n_vertici, n_facce
+REAL(dp)                        :: Integrale
+INTEGER                         :: i
+REAL(dp), ALLOCATABLE           :: XYZT(:,:)
+REAL(dp), ALLOCATABLE           :: W(:)
+REAL(dp)                        :: elapsedTime
+REAL(dp)                        :: t_start, t_end
 
-   CALL MeshReader('concave_vertex.dat', 'concave_vertex_new.dat', 'concave_tri.dat', poly)
+TYPE(t_polyhedron)              :: poly
 
-   WRITE(*,'(A,I0)') 'Ade:                   ', ade
-   WRITE(*,'(A,I0)') 'Numero di nodi tau:    ', n_tau
-   WRITE(*,'(A,I0)') 'Numero di vertici:     ', SIZE(poly%vertici, 1)
-   WRITE(*,'(A,I0)') 'Numero di facce:       ', SIZE(poly%facce, 1)
-   WRITE(*,'(A)')    'Funzione integranda:   f(x,y,z,tau) = 1'
+CHARACTER(LEN=256)              :: vertici_file
+CHARACTER(LEN=256)              :: vertici_new_file
+CHARACTER(LEN=256)              :: tri_file
 
-   WRITE(*,'(/,A)') 'Inizio Cubatura...'
-   CALL SYSTEM_CLOCK(c0, rate)
-   CALL OPC4D_MoL(ade, n_tau, poly%vertici, poly%vertici_new, poly%facce, 'GJ', XYZtau, W)
-   CALL SYSTEM_CLOCK(c1, rate)
-   elapsed = REAL(c1 - c0, dp) / REAL(rate, dp)
+!***********************************************************************
+! Parametri e caricamento mesh
+!***********************************************************************
 
-   integral = SUM(W)
+ade   = 10
+n_tau = 100
 
-   WRITE(*,'(A)') 'Fine Cubatura...'
-   WRITE(*,'(/,A,I0)')       'Numero di nodi 4D:    ', SIZE(XYZtau, 1)
-   WRITE(*,'(A,ES22.15)')    'Integrale numerico:   ', integral
-   WRITE(*,'(A,ES12.6,A)')   'Tempo di calcolo:     ', elapsed, ' s'
+WRITE(*,'(A)')
+WRITE(*,'(A)') '**************************************************************'
+WRITE(*,'(A)') '                        OPC4D MoL'
+WRITE(*,'(A)') '    Cubatura su Dominio Poliedrale Concavo in Movimento'
+WRITE(*,'(A)') '**************************************************************'
+WRITE(*,'(A)')
+
+WRITE(*,'(A,I0)') 'Ade:                   ', ade
+WRITE(*,'(A,I0)') 'Numero di nodi tau:    ', n_tau
+
+! Percorsi relativi alla cartella examples.
+vertici_file     = 'concave_vertex.dat'
+vertici_new_file = 'concave_vertex_new.dat'
+tri_file         = 'concave_tri.dat'
+
+! Lettura della mesh superficiale triangolare (configurazione iniziale
+! e finale) e della connettivita' delle facce.
+CALL MeshReader(vertici_file, vertici_new_file, tri_file, poly)
+
+n_vertici = SIZE(poly%vertici,1)
+n_facce   = SIZE(poly%facce,1)
+
+WRITE(*,'(A,I0)') 'Numero di vertici:     ', n_vertici
+WRITE(*,'(A,I0)') 'Numero di facce:       ', n_facce
+
+!***********************************************************************
+! Definizione funzione integranda
+!***********************************************************************
+
+WRITE(*,'(A)') 'Funzione integranda:   f(x,y,z,tau) = 1'
+
+!***********************************************************************
+! Inizio regola di cubatura
+!***********************************************************************
+
+WRITE(*,'(A)')
+WRITE(*,'(A)') 'Inizio Cubatura...'
+
+CALL CPU_TIME(t_start)
+
+CALL OPC4D_MoL(ade, n_tau, poly%vertici, poly%vertici_new, &
+                poly%facce, 'GJ', XYZT, W)
+! CALL OPC4D_MoL(ade, n_tau, poly%vertici, poly%vertici_new, &
+!                 poly%facce, 'D', XYZT, W)
+
+CALL CPU_TIME(t_end)
+
+elapsedTime = t_end - t_start
+
+Integrale = 0.0_dp
+DO i = 1, SIZE(W)
+    Integrale = Integrale + W(i) * f(XYZT(i,1), XYZT(i,2), &
+                                     XYZT(i,3), XYZT(i,4))
+END DO
+
+!***********************************************************************
+! Visualizzazione risultati e punti di cubatura
+!***********************************************************************
+
+WRITE(*,'(A)') 'Fine Cubatura...'
+
+WRITE(*,'(A)')
+WRITE(*,'(A,I0)') 'Numero di nodi 4D:      ', SIZE(W)
+WRITE(*,'(A,F0.15)') 'Integrale numerico:    ', Integrale
+WRITE(*,'(A,ES14.6,A)') 'Tempo di calcolo:      ', elapsedTime, ' s'
+
+CONTAINS
+
+!***********************************************************************
+! Funzione integranda
+!***********************************************************************
+
+REAL(dp) FUNCTION f(x,y,z,tau)
+
+    IMPLICIT NONE
+
+    REAL(dp), INTENT(IN) :: x
+    REAL(dp), INTENT(IN) :: y
+    REAL(dp), INTENT(IN) :: z
+    REAL(dp), INTENT(IN) :: tau
+
+    f = 1.0_dp
+
+END FUNCTION f
 
 END PROGRAM example_concave
