@@ -1,6 +1,10 @@
 # OptimalPolyCuba3D
 
-Questa directory contiene le implementazioni del metodo **OptimalPolyCuba3D**, basato sulla costruzione di regole di cubatura mediante una base tensoriale di polinomi di Chebyshev e sul calcolo dei momenti geometrici del dominio poliedrale tramite il teorema della divergenza applicato alle facce triangolari del bordo.
+<p align="center">
+  <img src="assets/banner.png" alt="Mesh con i nodi di cubatura" width="80%">
+</p>
+
+Questa directory contiene le implementazioni del metodo **OptimalPolyCuba3D (OPC3D)**, basato sulla costruzione di regole di cubatura mediante una base tensoriale di polinomi di Chebyshev e sul calcolo dei momenti geometrici del dominio poliedrale tramite il teorema della divergenza applicato alle facce triangolari del bordo.
 
 Il progetto comprende tre implementazioni dello stesso metodo:
 
@@ -10,6 +14,18 @@ Il progetto comprende tre implementazioni dello stesso metodo:
 
 In tutte le versioni la routine principale si chiama `OPC3D`.
 
+## Indice
+
+1. [Struttura della directory](#struttura-della-directory)
+2. [Il metodo in breve](#il-metodo-in-breve)
+3. [Implementazione MATLAB](#implementazione-matlab)
+4. [Implementazione Fortran](#implementazione-fortran)
+5. [Implementazione Fortran parallela (OpenMP)](#implementazione-fortran-parallela-openmp)
+6. [Rappresentazione del dominio](#rappresentazione-del-dominio)
+7. [Visualizzazione](#visualizzazione)
+8. [Autore](#autore)
+9. [Riferimenti](#riferimenti)
+
 ---
 
 ## Struttura della directory
@@ -17,8 +33,10 @@ In tutte le versioni la routine principale si chiama `OPC3D`.
 ```text
 Mesh3D/
 │
+├── README.md
+├── assets/
+│
 ├── Matlab3D/
-│   ├── OPC3D.m
 │   ├── examples/
 │   │   ├── bun_zipper.ply
 │   │   ├── bunny_tri.dat
@@ -32,18 +50,29 @@ Mesh3D/
 │   │   ├── example_convex.m
 │   │   └── example_polynomial.m
 │   └── src/
+│       ├── Dunavant/
+│       │   ├── dunavant_degree.m
+│       │   ├── dunavant_order_num.m
+│       │   ├── dunavant_rule.m
+│       │   ├── dunavant_rule_num.m
+│       │   ├── dunavant_suborder.m
+│       │   ├── dunavant_suborder_num.m
+│       │   ├── dunavant_subrule.m
+│       │   ├── i4_modp.m
+│       │   ├── i4_wrap.m
+│       │   ├── reference_to_physical_t3.m
+│       │   └── triangle_area.m
+│       ├── OPC3D.m
+│       ├── ShiftingTriangleQuadrature.m
+│       ├── TriangleQuadrature.m
 │       ├── chebpolys.m
 │       ├── chebyshev_moments_polyhedron.m
 │       ├── cub_gausscheb_tens3D.m
 │       ├── cubature_tens_chebyshev_facet_V.m
 │       ├── dCHEBVAND.m
-│       ├── ShiftingTriangleQuadrature.m
 │       ├── mono_next_grlex.m
 │       ├── scale_rule.m
-│       ├── tenscheb_norm2sq.m
-│       ├── TriangleQuadrature.m
-│       └── Dunavant/
-│           └── (routine di supporto per le regole di Dunavant)
+│       └── tenscheb_norm2sq.m
 │
 ├── Fortran3D/
 │   ├── Makefile
@@ -70,7 +99,16 @@ Mesh3D/
 └── Parallel3D/
     ├── Makefile
     ├── examples/
-    │   └── (stessi esempi e dati di Fortran3D)
+    │   ├── bunny_tri.dat
+    │   ├── bunny_vertex.dat
+    │   ├── concave_tri.dat
+    │   ├── concave_vertex.dat
+    │   ├── convex_tri.dat
+    │   ├── convex_vertex.dat
+    │   ├── example_bunny.f90
+    │   ├── example_concave.f90
+    │   ├── example_convex.f90
+    │   └── example_polynomial.f90
     └── src/
         ├── CubatureFunctions.f90
         ├── OPC3D_Parallel.f90
@@ -81,7 +119,20 @@ Mesh3D/
         └── TypesDef.f90
 ```
 
-Le tre implementazioni sono organizzate separatamente, ma mantengono la stessa impostazione algoritmica e gli stessi esempi di riferimento.
+Le tre implementazioni sono organizzate separatamente, ma mantengono la stessa impostazione algoritmica e gli stessi esempi di riferimento. Ogni directory è autonoma: contiene il proprio codice sorgente, gli esempi e i dati geometrici.
+
+### Esempi disponibili
+
+| Esempio | Dominio | Contenuto |
+|---------|---------|-----------|
+| `example_convex` | Poliedro convesso | Caso di base per la validazione. |
+| `example_concave` | Poliedro concavo | Verifica su un dominio non convesso. |
+| `example_bunny` | Stanford Bunny | Mesh di grandi dimensioni, test di prestazioni. |
+| `example_polynomial` | Poliedro di test | Verifica dell'esattezza su polinomi di grado `<= ade`. |
+
+<p align="center">
+  <img src="assets/domains.png" alt="I tre domini di test: convesso, concavo e Stanford Bunny" width="90%">
+</p>
 
 ---
 
@@ -117,9 +168,9 @@ La funzione principale è:
 Matlab3D/OPC3D.m
 ```
 
-Le funzioni ausiliarie sono in `Matlab3D/src/` (le routine di supporto per le regole di Dunavant sono in `Matlab3D/src/Dunavant/`), mentre gli esempi e i dati geometrici sono in `Matlab3D/examples/`.
+Le funzioni ausiliarie sono in `Matlab3D/src/`, mentre gli esempi e i dati geometrici sono in `Matlab3D/examples/`.
 
-L'interfaccia è:
+### Interfaccia
 
 ```matlab
 [XYZ, W] = OPC3D(ade, vertices, facets, method)
@@ -144,6 +195,35 @@ I = W' * f(XYZ(:,1), XYZ(:,2), XYZ(:,3));
 ```
 
 La separazione tra costruzione della regola e valutazione dell'integranda permette di riutilizzare la stessa regola per funzioni diverse.
+
+### Funzioni ausiliarie (`src/`)
+
+| File | Contenuto |
+|------|-----------|
+| `cub_gausscheb_tens3D.m` | Griglia tensoriale di Gauss-Chebyshev sul cubo di riferimento. |
+| `mono_next_grlex.m` | Generazione degli indici in ordinamento GRLEX. |
+| `chebpolys.m` | Valutazione dei polinomi di Chebyshev. |
+| `dCHEBVAND.m` | Matrice di Vandermonde-Chebyshev tridimensionale. |
+| `tenscheb_norm2sq.m` | Norme quadrate della base tensoriale di Chebyshev. |
+| `chebyshev_moments_polyhedron.m` | Momenti di Chebyshev sul poliedro. |
+| `cubature_tens_chebyshev_facet_V.m` | Contributo di una singola faccia ai momenti. |
+| `TriangleQuadrature.m` | Regola di quadratura sul triangolo (Gauss-Jacobi). |
+| `ShiftingTriangleQuadrature.m` | Traslazione della regola sul triangolo di riferimento alle facce della mesh. |
+| `scale_rule.m` | Riscalamento dei nodi sulla bounding box del poliedro. |
+| `Dunavant/` | Regole di Dunavant e relative routine di supporto (`dunavant_rule`, `dunavant_degree`, `triangle_area`, `reference_to_physical_t3`, ...). |
+
+### Esecuzione degli esempi
+
+Dalla directory `Matlab3D/examples/` (aggiungendo `../` e `../src/` al path, se non già fatto dallo script):
+
+```matlab
+example_convex
+example_concave
+example_polynomial
+example_bunny
+```
+
+`example_bunny.m` può leggere sia i file `bunny_vertex.dat` / `bunny_tri.dat` sia la mesh originale `bun_zipper.ply`.
 
 ---
 
@@ -259,15 +339,19 @@ make info
 
 ---
 
-## Implementazione Fortran parallela
+## Implementazione Fortran parallela (OpenMP)
 
-La directory `Parallel3D/` contiene la versione del codice Fortran con parallelizzazione OpenMP. La routine principale si trova in:
+La directory `Parallel3D/` contiene la versione del codice Fortran con parallelizzazione **OpenMP**. La routine principale si trova in:
 
 ```text
 Parallel3D/src/OPC3D_Parallel.f90
 ```
 
-Gli altri moduli, gli esempi e i dati geometrici hanno la stessa struttura di `Fortran3D/`. La compilazione avviene tramite il `Makefile` presente in `Parallel3D/`, con gli stessi target della versione seriale (`make convex`, `make bunny`, ...).
+Gli altri moduli (`CubatureFunctions.f90`, `PolyhedronMesh.f90`, `ReferenceFunctions.f90`, `TriangleQuadratureGJ.f90`, `TriangleQuadratureDunavant.f90`, `TypesDef.f90`), gli esempi e i dati geometrici hanno la stessa struttura di `Fortran3D/`. L'interfaccia di `OPC3D` è identica a quella seriale.
+
+### Compilazione ed esecuzione
+
+La compilazione avviene tramite il `Makefile` presente in `Parallel3D/`, con gli stessi target della versione seriale (`make convex`, `make concave`, `make polynomial`, `make bunny`, `make clean`, `make distclean`, `make info`).
 
 Il numero di thread si controlla con la variabile d'ambiente `OMP_NUM_THREADS`:
 
@@ -275,92 +359,6 @@ Il numero di thread si controlla con la variabile d'ambiente `OMP_NUM_THREADS`:
 export OMP_NUM_THREADS=4
 make bunny
 ```
-
----
-
-## Rappresentazione del dominio
-
-Il dominio tridimensionale è rappresentato mediante una **mesh superficiale triangolare chiusa**.
-
-La geometria è descritta dalle due matrici:
-
-```text
-vertices
-facets
-```
-
-La matrice `vertices` contiene, per ogni riga, le coordinate di un vertice. La matrice `facets` contiene, per ogni riga, gli indici dei tre vertici che costituiscono una faccia triangolare.
-
----
-
-## Orientamento delle facce
-
-I vertici di ciascun triangolo devono essere ordinati in modo coerente, affinché il prodotto vettoriale
-
-```text
-(V2 - V1) x (V3 - V1)
-```
-
-produca una **normale orientata verso l'esterno del dominio**.
-
-La mesh deve essere:
-
-1. chiusa;
-2. composta da facce triangolari;
-3. orientata coerentemente;
-4. rappresentativa del bordo del dominio.
-
-Queste condizioni sono necessarie perché i momenti geometrici vengono calcolati dalla rappresentazione superficiale del dominio con il teorema della divergenza. Il codice non verifica né corregge l'orientamento: una mesh non chiusa o orientata in modo incoerente produce risultati errati.
-
----
-
-## Formato dei dati geometrici
-
-Per le implementazioni Fortran le mesh vengono fornite mediante due file:
-
-```text
-*_vertex.dat
-*_tri.dat
-```
-
-Il file dei vertici contiene prima il numero di vertici, poi le coordinate:
-
-```text
-N
-x_1 y_1 z_1
-x_2 y_2 z_2
-...
-x_N y_N z_N
-```
-
-Il file delle facce contiene prima il numero di facce, poi la connettività triangolare (indici dei vertici a partire da 1):
-
-```text
-M
-i_1 j_1 k_1
-i_2 j_2 k_2
-...
-i_M j_M k_M
-```
-
-La routine `MeshReader` carica i due file e costruisce il tipo `t_polyhedron`, che contiene i vertici, le facce e la bounding box.
-
----
-
-## Visualizzazione delle mesh
-
-La visualizzazione tridimensionale è implementata negli esempi MATLAB, che permettono di mostrare le mesh mediante `patch`.
-
-Per mesh di grandi dimensioni il rendering può essere semplificato con una versione ridotta della mesh:
-
-```matlab
-[facets_plot, vertices_plot] = reducepatch(facets, vertices, 0.01);
-```
-
-La mesh ridotta deve essere utilizzata **solamente per la visualizzazione** e non deve sostituire la mesh completa utilizzata dalla procedura di cubatura.
-
-Le implementazioni Fortran sono focalizzate sulla costruzione della regola di cubatura e non includono una componente grafica.
-
 ---
 
 ## Autore
