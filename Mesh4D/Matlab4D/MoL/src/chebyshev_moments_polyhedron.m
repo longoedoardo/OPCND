@@ -1,12 +1,12 @@
 function moments = chebyshev_moments_polyhedron(vertices, facets, ade, chebyshev_indices, dbox, method)
 
-%********************************************************************************
+%**************************************************************************
 %
 % function moments = chebyshev_moments_polyhedron(vertices, facets, ade,
 %                                           chebyshev_indices, dbox, method)
 %
 % Calcolo dei momenti di una base di polinomi di Chebyshev tensoriali:
-%                         P(x,y,z) = T_i(x) * T_j(y) * T_k(z)
+%                    P(x,y,z) = T_i(x) * T_j(y) * T_k(z)
 % con grado totale (i+j+k) <= ade, integrati sul volume di un poliedro.
 %
 % L'integrale di volume viene ricondotto a un integrale di superficie sulle
@@ -19,7 +19,8 @@ function moments = chebyshev_moments_polyhedron(vertices, facets, ade, chebyshev
 % fisico per ciascuna faccia.
 % Sono disponibili i metodi di Gauss-Jacobi e Dunavant.
 %
-%********************************************************************************
+%**************************************************************************
+%
 % INPUT:
 %
 % vertices:          Matrice [m x 3] delle coordinate dei vertici.
@@ -41,25 +42,27 @@ function moments = chebyshev_moments_polyhedron(vertices, facets, ade, chebyshev
 %                    * "D": Metodo simmetrico di Dunavant
 %                    * "GJ": Metodo di Gauss-Jacobi
 %
-%********************************************************************************
+%**************************************************************************
+%
 % OUTPUT:
 %
 % moments:           Vettore colonna contenente i momenti calcolati per
 %                    ogni tripla di indici in chebyshev_indices.
 %
-%********************************************************************************
+%**************************************************************************
+%
 % Riferimento bibliografico:
 % [1] E.B. Chin, J.B. Lasserre, N. Sukumar: "Numerical integration of
 % homogeneous function on convex and nonconvex polygons and polyhedra".
 % Computational Mechanics, Vol. 56, No. 6, pp 967-981.
 %
-%********************************************************************************
+%**************************************************************************
 
 num_indici = size(chebyshev_indices, 1);
 n_facce = size(facets, 1);
 
-% Pre-allocazione della matrice dei momenti
-chebyshev_moms = zeros(num_indici, n_facce);
+% Pre-allocazione dei momenti
+moments = zeros(num_indici, 1);
 
 v1 = vertices(facets(:, 1), :);
 v2 = vertices(facets(:, 2), :);
@@ -89,8 +92,7 @@ for k = 1:n_facce
     area2 = norm(cp);
 
     if area2 <= 1e-14
-        % Faccia degenere: nessun contributo
-        chebyshev_moms(:, k) = 0;
+        % Faccia degenere, nessun contributo
         continue;
     end
 
@@ -103,11 +105,8 @@ for k = 1:n_facce
 
     % Componente x della normale esterna, come richiesto dal
     % teorema della divergenza applicato al campo V = (f, 0, 0)
-    chebyshev_moms(:, k) = norm_ext(1) * moms_facet;
+    moments = moments + norm_ext(1) * moms_facet;
 
 end
-
-% Somma finale dei contributi di tutte le facce
-moments = sum(chebyshev_moms, 2);
 
 end

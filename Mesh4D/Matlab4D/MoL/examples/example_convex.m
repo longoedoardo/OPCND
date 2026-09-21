@@ -28,7 +28,7 @@ n_tau = 10;
 
 fprintf('\n');
 fprintf('**************************************************************\n');
-fprintf('                 OPTIMALPOLYCUBA4D\n');
+fprintf('                       OPC4D_MoL\n');
 fprintf('                - Metodo delle Linee -\n');
 fprintf('    Cubatura su Dominio Poliedrale Convesso in Movimento\n');
 fprintf('**************************************************************\n');

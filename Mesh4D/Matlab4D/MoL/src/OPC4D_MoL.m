@@ -19,8 +19,10 @@ function [XYZtau, W] = OPC4D_MoL(ade, n_tau, vertici_iniziali, vertici_finali, f
 % di cubatura 4D, senza effettuare la valutazione della funzione integranda
 % né il calcolo dell'integrale.
 %
-%**************************************************************************%
+%**************************************************************************
+%
 %   INPUTS:
+%
 %   - ade:
 %       Grado polinomiale totale massimo della regola di cubatura spaziale.
 %
@@ -80,7 +82,6 @@ if strcmp(method, "D") && ade > 20
     return;
 end
 
-
 %**************************************************************************
 %
 % INIZIO PARTE SHAPE-INDEPENDENT
@@ -131,8 +132,8 @@ for k = 1:n_tau
     % Bounding box dinamica al tempo corrente
     bbox_min = min(vertices_tau, [], 1);
     bbox_max = max(vertices_tau, [], 1);
-    bbox_tau = [bbox_min(1), bbox_max(1), bbox_min(2), bbox_max(2), ...
-            bbox_min(3), bbox_max(3)];
+
+    bbox_tau = [bbox_min; bbox_max];
 
     % Momenti della base sul poliedro (teorema della divergenza sulle facce)
     moments_ch = chebyshev_moments_polyhedron(vertices_tau, facets, ade, ...
