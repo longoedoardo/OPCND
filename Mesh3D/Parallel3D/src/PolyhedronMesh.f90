@@ -6,7 +6,6 @@ MODULE PolyhedronMesh
     TYPE :: t_polyhedron
         REAL(dp), ALLOCATABLE               :: vertici(:,:)
         INTEGER, ALLOCATABLE                :: facce(:,:)
-        REAL(dp)                            :: bbox(6)
     END TYPE t_polyhedron
 
     CONTAINS
@@ -49,12 +48,6 @@ MODULE PolyhedronMesh
         
         READ(u_tri, *) ((poly%facce(i, j), j=1,3), i=1,n_facce)
         CLOSE(u_tri)
-
-        ! Calcolo della bounding box, prendo l'intera prima colonna e analizzo prendendo il max o il min, il risultato
-        ! finale e' un vettore di 6 valori che viene inserito in poly%bbox
-        poly%bbox = [ MINVAL(poly%vertici(:,1)), MAXVAL(poly%vertici(:,1)), &
-                      MINVAL(poly%vertici(:,2)), MAXVAL(poly%vertici(:,2)), &
-                      MINVAL(poly%vertici(:,3)), MAXVAL(poly%vertici(:,3)) ]
 
     END SUBROUTINE MeshReader
 

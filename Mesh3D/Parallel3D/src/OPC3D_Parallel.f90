@@ -12,7 +12,7 @@ SUBROUTINE OPC3D_Parallel(ade, vertices, facets, method, XYZ, W)
 !
 ! SUBROUTINE OPC3D_Parallel(ade, vertices, facets, method, XYZ, W)
 !
-! Versione parallelizzata di OPC3D
+! Versione parallelizzata di OPC3D con OpenMP
 !
 ! Calcola un'approssimazione numerica di un integrale di volume
 ! tridimensionale su un dominio poliedrico rappresentato mediante
@@ -26,18 +26,6 @@ SUBROUTINE OPC3D_Parallel(ade, vertices, facets, method, XYZ, W)
 ! Il metodo non richiede una decomposizione volumetrica del dominio
 ! mediante tetraedri e utilizza esclusivamente la triangolazione della
 ! superficie del poliedro.
-!
-! La costruzione della regola è suddivisa in due componenti:
-!
-!   1. PARTE SHAPE-INDEPENDENT
-!      Costruzione della griglia tensoriale di Gauss-Chebyshev sul cubo
-!      di riferimento [-1,1]^3 e della corrispondente matrice di
-!      Vandermonde-Chebyshev.
-!
-!   2. PARTE SHAPE-DEPENDENT
-!      Calcolo dei momenti della base di Chebyshev sul dominio fisico
-!      e successivo riscalamento della regola sulla bounding box della
-!      mesh.
 !
 !***********************************************************************
 !
@@ -95,18 +83,18 @@ IMPLICIT NONE
 !**********************************************************************
 ! Argomenti
 !**********************************************************************
-INTEGER,                                    INTENT(IN)  :: ade
-CHARACTER(LEN=*),                           INTENT(IN)  :: method
-REAL(dp),                                   INTENT(IN)  :: vertices(:,:)
-INTEGER,                                    INTENT(IN)  :: facets(:,:)
-REAL(dp), ALLOCATABLE,                      INTENT(OUT) :: XYZ(:,:)
-REAL(dp), ALLOCATABLE,                      INTENT(OUT) :: W(:)
+INTEGER, INTENT(IN)                                     :: ade
+CHARACTER(LEN=*), INTENT(IN)                            :: method
+REAL(dp), INTENT(IN)                                    :: vertices(:,:)
+INTEGER, INTENT(IN)                                     :: facets(:,:)
+REAL(dp), ALLOCATABLE, INTENT(OUT)                      :: XYZ(:,:)
+REAL(dp), ALLOCATABLE, INTENT(OUT)                      :: W(:)
 !**********************************************************************
 ! Variabili locali
 !**********************************************************************
-INTEGER :: N, N_mom
-INTEGER :: k
-INTEGER :: ind_curr(3)
+INTEGER                                                 :: N, N_mom
+INTEGER                                                 :: k
+INTEGER                                                 :: ind_curr(3)
 REAL(dp), ALLOCATABLE                                   :: XYZW_tens_ref(:,:)
 REAL(dp), ALLOCATABLE                                   :: X(:,:)
 REAL(dp), ALLOCATABLE                                   :: XYZW_tens(:,:)
@@ -117,6 +105,7 @@ INTEGER, ALLOCATABLE                                    :: chebyshev_indices(:,:
 
 REAL(dp), ALLOCATABLE                                   :: bbox(:)
 REAL(dp), ALLOCATABLE                                   :: moments_ch(:)
+REAL(dp), ALLOCATABLE                                   :: alpha(:)
 !***********************************************************************
 
 ! Controllo della disponibilità delle regole di Dunavant

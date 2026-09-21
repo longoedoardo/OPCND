@@ -42,8 +42,9 @@ MODULE CubatureFunctions
 
          CALL TriangleQuadratureGJPoints(nodes, weights, n_points, nGP)
 
+         ! I pesi della quadratura GJ standard sono riferiti a un
+         ! triangolo di area 1/2.
          weights = 2.0_dp * weights
-
 
       ! METODO D: Quadratura di Dunavant
       ELSE IF (TRIM(method) == 'D') THEN
@@ -83,12 +84,16 @@ MODULE CubatureFunctions
 
       REAL(dp) :: A(3)
       REAL(dp) :: B(3)
+      REAL(dp) :: cross_product(3)
       REAL(dp) :: area
       !*******************************************************************************
 
       n_points = SIZE(weights_ref)
 
+      IF (ALLOCATED(nodes)) DEALLOCATE(nodes)
       ALLOCATE(nodes(n_points,3))
+
+      IF (ALLOCATED(weights)) DEALLOCATE(weights)
       ALLOCATE(weights(n_points))
 
       ! Lati del triangolo reale a partire dal primo vertice
@@ -102,7 +107,12 @@ MODULE CubatureFunctions
 
       END DO
 
-      area = 0.5_dp * SQRT( (A(2)*B(3) - A(3)*B(2))**2 +  (A(3)*B(1) - A(1)*B(3))**2 +  (A(1)*B(2) - A(2)*B(1))**2 )
+      ! Area del triangolo fisico
+      cross_product(1) = A(2)*B(3) - A(3)*B(2)
+      cross_product(2) = A(3)*B(1) - A(1)*B(3)
+      cross_product(3) = A(1)*B(2) - A(2)*B(1)
+
+      area = 0.5_dp * SQRT(SUM(cross_product**2))
 
       weights = area * weights_ref
 
@@ -110,8 +120,9 @@ MODULE CubatureFunctions
 
    
    SUBROUTINE chebyshev_moments_polyhedron(vertices, facets, ade, chebyshev_indices, dbox, method, moments)
-
+      
       !*******************************************************************************
+      !
       ! Calcola i momenti dei polinomi di Chebyshev sul poliedro tridimensionale
       ! delimitato dalla mesh triangolare definita da vertices e facets.
       ! I momenti volumetrici sono trasformati, mediante il teorema della divergenza,
@@ -128,14 +139,8 @@ MODULE CubatureFunctions
       ! contributo ai momenti. I contributi ottenuti da tutte le facce vengono infine
       ! sommati per ottenere i momenti del poliedro.
       !
-      ! Si assume che:
-      !
-      !   - vertices contenga le coordinate dei vertici della mesh;
-      !   - facets contenga la connettivita' triangolare della superficie;
-      !   - le facce siano orientate coerentemente;
-      !   - l'orientamento delle facce sia compatibile con le normali esterne;
-      !   - la superficie triangolare sia chiusa.
       !*******************************************************************************
+
 
       USE TriangleQuadratureGJ
       USE TriangleQuadratureDunavant
@@ -157,7 +162,9 @@ MODULE CubatureFunctions
       !*******************************************************************************
       INTEGER :: num_indici
       INTEGER :: n_facce
+      INTEGER :: n_quad
       INTEGER :: k
+      INTEGER :: q
 
       REAL(dp) :: A(3)
       REAL(dp) :: B(3)
@@ -169,7 +176,6 @@ MODULE CubatureFunctions
       REAL(dp), ALLOCATABLE :: XYZW(:,:)
       REAL(dp), ALLOCATABLE :: WV_CUB(:)
 
-      REAL(dp), ALLOCATABLE :: chebyshev_moms(:,:)
       REAL(dp), ALLOCATABLE :: moms_facet_raw(:)
 
       REAL(dp), ALLOCATABLE :: nodes(:,:)
@@ -179,31 +185,29 @@ MODULE CubatureFunctions
       REAL(dp) :: area2
       !*******************************************************************************
 
-
       ! Dimensioni
       num_indici = SIZE(chebyshev_indices, 1)
       n_facce = SIZE(facets, 1)
 
-      ! Allocazione dei momenti sulle singole facce
-      ALLOCATE(chebyshev_moms(num_indici, n_facce))
-      chebyshev_moms = 0.0_dp
-
       CALL triangle_quadrature(method, ade, nodes, weights)
+      n_quad = SIZE(weights)
 
-      !$OMP PARALLEL DO DEFAULT(NONE) SCHEDULE(DYNAMIC,16) &
-      !$OMP& SHARED(vertices, facets, nodes, weights, chebyshev_indices, dbox, &
-      !$OMP&        chebyshev_moms, n_facce) &
-      !$OMP& PRIVATE(k, V_face, A, B, cp, area2, norm_ext, XYZW, WV_CUB, &
-      !$OMP&         moms_facet_raw)
+      ALLOCATE(XYZW(n_quad, 3))
+      ALLOCATE(WV_CUB(n_quad))
+      ALLOCATE(moments(num_indici))
+      moments = 0.0_dp
+
+      !$OMP PARALLEL DO DEFAULT(NONE) SCHEDULE(DYNAMIC,16)             &
+      !$OMP& SHARED(vertices, facets, nodes, weights, chebyshev_indices, &
+      !$OMP&        dbox, moments, n_facce, n_quad)                    &
+      !$OMP& PRIVATE(k, q, V_face, A, B, cp, area2, norm_ext,         &
+      !$OMP&         XYZW, WV_CUB, moms_facet_raw)
+
       DO k = 1, n_facce
 
          V_face(1,:) = vertices(facets(k,1),:)
          V_face(2,:) = vertices(facets(k,2),:)
          V_face(3,:) = vertices(facets(k,3),:)
-
-         ! Trasformazione dei punti di quadratura dal triangolo
-         ! di riferimento al triangolo fisico
-         CALL shiftingTriangleQuadrature(V_face, nodes, weights, XYZW, WV_CUB)
 
          ! Calcolo della normale alla faccia
          A = V_face(2,:) - V_face(1,:)
@@ -216,27 +220,26 @@ MODULE CubatureFunctions
          area2 = SQRT(SUM(cp**2))
 
          IF (area2 <= 1.0d-14) THEN
-            chebyshev_moms(:,k) = 0.0_dp
             CYCLE
          END IF
 
+         ! Trasformazione affine dei punti dal triangolo di riferimento
+         ! al triangolo fisico x = V1 + xi * (V2-V1) + eta * (V3-V1).
+         DO q = 1, n_quad
+            XYZW(q,:) = V_face(1,:) + nodes(q,1) * A + nodes(q,2) * B
+         END DO
+
+         WV_CUB = 0.5_dp * area2 * weights
          norm_ext = cp / area2
 
          ! Calcolo dei momenti sulla faccia
          CALL cubature_tens_chebyshev_facet_V(XYZW, WV_CUB, chebyshev_indices, dbox, moms_facet_raw)
 
          ! Contributo della faccia
-         chebyshev_moms(:,k) = norm_ext(1) * moms_facet_raw
+         moments = moments + norm_ext(1) * moms_facet_raw
 
       END DO
       !$OMP END PARALLEL DO
-
-      ALLOCATE(moments(num_indici))
-
-      ! Somma dei contributi delle singole facce
-      moments = SUM(chebyshev_moms, DIM=2)
-
-      DEALLOCATE(chebyshev_moms)
 
    END SUBROUTINE chebyshev_moments_polyhedron
 
@@ -244,7 +247,7 @@ MODULE CubatureFunctions
    SUBROUTINE cubature_tens_chebyshev_facet_V(nodes, weights, chebyshev_indices, dbox, chebyshev_moms)
 
       !*******************************************************************************
-      ! Calcola i momenti di Chebyshev su una faccia triangolare 3D
+      ! Calcola i momenti di Chebyshev su una faccia triangolare 
       !*******************************************************************************
 
       IMPLICIT NONE
@@ -252,74 +255,76 @@ MODULE CubatureFunctions
       !*******************************************************************************
       ! Argomenti
       !*******************************************************************************
-      REAL(dp), INTENT(IN) :: nodes(:, :)
-      REAL(dp), INTENT(IN) :: weights(:)
-      INTEGER, INTENT(IN) :: chebyshev_indices(:, :)
-      REAL(dp), INTENT(IN) :: dbox(6)
-      REAL(dp), ALLOCATABLE, INTENT(OUT) :: chebyshev_moms(:)
+      REAL(dp), INTENT(IN)    :: nodes(:, :)        
+      REAL(dp), INTENT(IN)    :: weights(:)         
+      INTEGER, INTENT(IN)    :: chebyshev_indices(:, :) 
+      REAL(dp), INTENT(IN)    :: dbox(6)
+      REAL(dp), ALLOCATABLE, INTENT(OUT)   :: chebyshev_moms(:)  
       !*******************************************************************************
       ! Variabili locali
       !*******************************************************************************
-      INTEGER :: n, m, deg_max, c, iv
-      REAL(dp) :: B1
-      REAL(dp), ALLOCATABLE :: XN(:), YN(:), ZN(:)
-      REAL(dp), ALLOCATABLE :: TX(:, :), TY(:, :), TZ(:, :)
-      REAL(dp), ALLOCATABLE :: IntX(:, :)
+      INTEGER                :: n, m, max_i, max_j, max_k, c, iv
+      REAL(dp)                :: B1
+      REAL(dp), ALLOCATABLE   :: XN(:), YN(:), ZN(:)
+      REAL(dp), ALLOCATABLE   :: TX(:, :), TY(:, :), TZ(:, :)
+      REAL(dp), ALLOCATABLE   :: IntX(:, :)
+      INTEGER, ALLOCATABLE   :: idx_i(:), idx_j(:), idx_k(:)
+      REAL(dp), ALLOCATABLE   :: w(:)
       !*******************************************************************************
 
       n = SIZE(nodes, 1)
       m = SIZE(chebyshev_indices, 1)
 
       ALLOCATE(XN(n), YN(n), ZN(n))
+      ALLOCATE(w(n))
 
-      XN = (nodes(:, 1) - (dbox(1) + dbox(2)) / 2.0_dp) / &
-            ((dbox(2) - dbox(1)) / 2.0_dp)
-
-      YN = (nodes(:, 2) - (dbox(3) + dbox(4)) / 2.0_dp) / &
-            ((dbox(4) - dbox(3)) / 2.0_dp)
-
-      ZN = (nodes(:, 3) - (dbox(5) + dbox(6)) / 2.0_dp) / &
-            ((dbox(6) - dbox(5)) / 2.0_dp)
-
+      XN = (nodes(:, 1) - (dbox(1) + dbox(2)) / 2.0_dp) / ((dbox(2) - dbox(1)) / 2.0_dp)
+      YN = (nodes(:, 2) - (dbox(3) + dbox(4)) / 2.0_dp) / ((dbox(4) - dbox(3)) / 2.0_dp)
+      ZN = (nodes(:, 3) - (dbox(5) + dbox(6)) / 2.0_dp) / ((dbox(6) - dbox(5)) / 2.0_dp)
+    
       B1 = (dbox(2) - dbox(1)) / 2.0_dp
+      w = weights(:)
 
-      deg_max = MAXVAL(chebyshev_indices(:, 1))
+      max_i = MAXVAL(chebyshev_indices(:, 1))
+      max_j = MAXVAL(chebyshev_indices(:, 2))
+      max_k = MAXVAL(chebyshev_indices(:, 3))
 
-      ALLOCATE(TX(n, deg_max + 2))
-      ALLOCATE(TY(n, deg_max + 1))
-      ALLOCATE(TZ(n, deg_max + 1))
+      ALLOCATE(TX(n, max_i + 2))
+      ALLOCATE(TY(n, max_j + 1))
+      ALLOCATE(TZ(n, max_k + 1))
 
-      CALL chebpolys(deg_max + 1, XN, TX)
-      CALL chebpolys(deg_max, YN, TY)
-      CALL chebpolys(deg_max, ZN, TZ)
+      CALL chebpolys(max_i + 1, XN, TX)
+      CALL chebpolys(max_j, YN, TY)
+      CALL chebpolys(max_k, ZN, TZ)
 
-      ALLOCATE(IntX(n, deg_max + 1))
+      ALLOCATE(IntX(n, max_i + 1))
       IntX = 0.0_dp
+    
+      IntX(:, 1) = XN 
 
-      IntX(:, 1) = XN
-
-      IF (deg_max >= 1) THEN
+      IF (max_i >= 1) THEN
          IntX(:, 2) = (XN**2) / 2.0_dp
       END IF
 
-      IF (deg_max >= 2) THEN
-         DO iv = 2, deg_max
-            IntX(:, iv + 1) = TX(:, iv+2) / (2.0_dp*(iv+1)) &
-                              - TX(:, iv)   / (2.0_dp*(iv-1))
+      IF (max_i >= 2) THEN
+         DO iv = 2, max_i
+            IntX(:, iv + 1) = TX(:, iv+2) / (2.0_dp*(iv+1)) - TX(:, iv) / (2.0_dp*(iv-1))
          END DO
       END IF
 
+      ALLOCATE(idx_i(m), idx_j(m), idx_k(m))
+      idx_i = chebyshev_indices(:, 1) + 1
+      idx_j = chebyshev_indices(:, 2) + 1
+      idx_k = chebyshev_indices(:, 3) + 1
+
+      IF (ALLOCATED(chebyshev_moms)) DEALLOCATE(chebyshev_moms)
       ALLOCATE(chebyshev_moms(m))
 
       DO c = 1, m
-         chebyshev_moms(c) = B1 * SUM( &
-               weights * &
-               IntX(:, chebyshev_indices(c,1) + 1) * &
-               TY(:, chebyshev_indices(c,2) + 1) * &
-               TZ(:, chebyshev_indices(c,3) + 1) )
+         chebyshev_moms(c) = B1 * SUM(w * IntX(:, idx_i(c)) * TY(:, idx_j(c)) * TZ(:, idx_k(c)))
       END DO
 
-      DEALLOCATE(XN, YN, ZN, TX, TY, TZ, IntX)
+      DEALLOCATE(XN, YN, ZN, w, TX, TY, TZ, IntX, idx_i, idx_j, idx_k)
 
    END SUBROUTINE cubature_tens_chebyshev_facet_V
 
