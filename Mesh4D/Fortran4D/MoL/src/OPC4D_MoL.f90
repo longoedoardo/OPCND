@@ -76,6 +76,9 @@ CONTAINS
 
       IMPLICIT NONE
 
+      !**********************************************************************
+      ! Argomenti
+      !**********************************************************************
       INTEGER, INTENT(IN)                         :: ade
       INTEGER, INTENT(IN)                         :: n_tau
       REAL(dp), INTENT(IN)                        :: vertices_initial(:,:)
@@ -84,14 +87,15 @@ CONTAINS
       CHARACTER(LEN=*), INTENT(IN)                :: method
       REAL(dp), ALLOCATABLE, INTENT(OUT)          :: XYZT(:,:)
       REAL(dp), ALLOCATABLE, INTENT(OUT)          :: W(:)
-
+      !**********************************************************************
+      ! Variabili locali
+      !**********************************************************************
       INTEGER                                     :: n_spaz
       INTEGER                                     :: n_mom
       INTEGER                                     :: k
       INTEGER                                     :: first
       INTEGER                                     :: last
       INTEGER                                     :: ind_curr(3)
-
       REAL(dp), ALLOCATABLE                       :: tau_nodes(:)
       REAL(dp), ALLOCATABLE                       :: tau_weights(:)
       REAL(dp), ALLOCATABLE                       :: xyzw_tens_ref(:,:)
@@ -106,7 +110,8 @@ CONTAINS
       INTEGER, ALLOCATABLE                        :: chebyshev_indices(:,:)
       REAL(dp)                                    :: bbox_tau(6)
       REAL(dp)                                    :: tau
-
+      !**********************************************************************
+      
       IF (TRIM(method) == 'D' .AND. ade > 20) THEN
          WRITE(*,'(A)') 'WARNING: Le regole di Dunavant sono disponibili solo fino al grado 20.'
          RETURN
