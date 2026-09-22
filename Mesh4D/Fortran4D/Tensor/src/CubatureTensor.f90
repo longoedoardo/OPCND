@@ -262,7 +262,6 @@ MODULE CubatureTensor
       !*******************************************************************************
       ! Scala le coordinate dei punti di quadratura di una regola tensoriale 4D
       ! dal dominio di riferimento [-1,1]^4 al bounding box geometrico del dominio.
-      ! I pesi (colonna 5) restano inalterati.
       !*******************************************************************************
 
       IMPLICIT NONE

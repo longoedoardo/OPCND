@@ -92,7 +92,7 @@ CONTAINS
       REAL(dp), ALLOCATABLE                       :: V_ref(:,:), coeffs(:), moments_ch(:), alpha(:)
       REAL(dp), ALLOCATABLE                       :: vertices_4d(:,:)
       INTEGER, ALLOCATABLE                        :: chebyshev_indices(:,:)
-      REAL(dp)                                    :: bbox(2,4)   ! bbox(1,:) = min, bbox(2,:) = max
+      REAL(dp)                                    :: bbox(2,4)
       !**********************************************************************
 
       !**********************************************************************
@@ -146,7 +146,6 @@ CONTAINS
       CALL chebyshev_moments_polyhedron_4D(vertices_4d, facets, ade, chebyshev_indices, bbox, method, moments_ch)
 
       ! Riscalamento dei nodi di riferimento sulla bounding box reale
-      ! I pesi (colonna 5) non vengono modificati
       CALL scale_rule(XYZTW_ref, bbox, XYZTW)
 
       !**********************************************************************
